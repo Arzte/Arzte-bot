@@ -19,6 +19,8 @@ use std::collections::HashSet;
 use serenity::prelude::Mutex;
 use std::sync::Arc;
 use typemap::Key;
+use std::env;
+use env_logger::{Builder, Target};
 
 pub struct ShardManagerContainer;
 
@@ -39,11 +41,12 @@ impl EventHandler for Handler {
 }
 
 fn main() {
-    // Initialize the logger to use environment variables.
-    //
-    // In this case, a good default is setting the environment variable
-    // `RUST_LOG` to debug`.
-    env_logger::init().expect("Failed to initialize env_logger");
+    let mut builder = Builder::new();
+    builder.target(Target::Stdout);
+    if env::var("LOG").is_ok() {
+        builder.parse(&env::var("LOG").unwrap());
+    }
+    builder.init();
 
     // Settings file, used currently for token
     let mut settings = config::Config::default();

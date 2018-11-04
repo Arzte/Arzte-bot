@@ -1,7 +1,9 @@
-#[macro_use] extern crate log;
-#[macro_use] extern crate serenity;
-extern crate config;
+#[macro_use]
+extern crate log;
+#[macro_use]
+extern crate serenity;
 extern crate chrono;
+extern crate config;
 extern crate env_logger;
 extern crate kankyo;
 extern crate rand;
@@ -9,18 +11,18 @@ extern crate typemap;
 
 mod commands;
 
+use env_logger::{Builder, Target};
 use serenity::client::bridge::gateway::ShardManager;
 use serenity::framework::StandardFramework;
+use serenity::http;
 use serenity::model::event::ResumedEvent;
 use serenity::model::gateway::Ready;
-use serenity::prelude::*;
-use serenity::http;
-use std::collections::HashSet;
 use serenity::prelude::Mutex;
+use serenity::prelude::*;
+use std::collections::HashSet;
+use std::env;
 use std::sync::Arc;
 use typemap::Key;
-use std::env;
-use env_logger::{Builder, Target};
 
 pub struct ShardManagerContainer;
 
@@ -50,9 +52,13 @@ fn main() {
 
     // Settings file, used currently for token
     let mut settings = config::Config::default();
-    settings.merge(config::File::with_name("Settings")).expect("No file called Settings.toml in same folder as bot");
+    settings
+        .merge(config::File::with_name("Settings"))
+        .expect("No file called Settings.toml in same folder as bot");
     // set settings to variables that can be accessed.
-    let token = settings.get_str("token").expect("No token/token value set in Settings file");
+    let token = settings
+        .get_str("token")
+        .expect("No token/token value set in Settings file");
 
     let mut client = Client::new(&token, Handler).expect("Err creating client");
 
@@ -67,19 +73,17 @@ fn main() {
             set.insert(info.owner.id);
 
             set
-        },
+        }
         Err(why) => panic!("Couldn't get application info: {:?}", why),
     };
 
-    client.with_framework(StandardFramework::new()
-        .configure(|c| c
-            .owners(owners)
-            .prefix(".db "))
-        .command("ping", |c| c.cmd(commands::meta::ping))
-        .command("multiply", |c| c.cmd(commands::math::multiply))
-        .command("quit", |c| c
-            .cmd(commands::owner::quit)
-            .owners_only(true)));
+    client.with_framework(
+        StandardFramework::new()
+            .configure(|c| c.owners(owners).prefix(".db "))
+            .command("ping", |c| c.cmd(commands::meta::ping))
+            .command("multiply", |c| c.cmd(commands::math::multiply))
+            .command("quit", |c| c.cmd(commands::owner::quit).owners_only(true)),
+    );
 
     if let Err(why) = client.start() {
         error!("Client error: {:?}", why);

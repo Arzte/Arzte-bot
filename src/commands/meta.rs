@@ -1,6 +1,6 @@
-use serenity::client::bridge::gateway::ShardId;
-use chrono::Duration;
 use super::super::ShardManagerContainer;
+use chrono::Duration;
+use serenity::client::bridge::gateway::ShardId;
 
 command!(ping(ctx, msg) {
     // This is done to find the time difference between when sending the the 

@@ -5,15 +5,27 @@ extern crate chrono;
 extern crate env_logger;
 extern crate kankyo;
 extern crate rand;
+extern crate typemap;
 
 mod commands;
 
+use serenity::client::bridge::gateway::ShardManager;
 use serenity::framework::StandardFramework;
 use serenity::model::event::ResumedEvent;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 use serenity::http;
 use std::collections::HashSet;
+use serenity::prelude::Mutex;
+use std::sync::Arc;
+use typemap::Key;
+
+pub struct ShardManagerContainer;
+
+impl Key for ShardManagerContainer {
+    type Value = Arc<Mutex<ShardManager>>;
+}
+
 struct Handler;
 
 impl EventHandler for Handler {
@@ -40,8 +52,11 @@ fn main() {
     let token = settings.get_str("token").expect("No token/token value set in Settings file");
 
     let mut client = Client::new(&token, Handler).expect("Err creating client");
-fn main() {
-    println!("Hello, world!");
+
+    {
+        let mut data = client.data.lock();
+        data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
+    }
 
     let owners = match http::get_current_application_info() {
         Ok(info) => {

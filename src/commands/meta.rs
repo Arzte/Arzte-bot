@@ -54,11 +54,6 @@ command!(ping(ctx, msg) {
         None => "0ms".to_string()
     };
 
-    // This is done to find the time difference between when sending the the 
-    let start = msg.timestamp.timestamp_millis();
-    let mut message = msg.channel_id.say("Pong!")?;
-    let timestamp = message.timestamp.timestamp_millis() - start;
-
-    let string = format!("Pong! \n```\nMessage Latency: {}ms, \nShard Latency: {}```", timestamp, latency);
+    let string = format!("Pong! \n**```prolog\n   Message Latency: {}ms, \n     Shard Latency: {}\n```**", timestamp, latency);
     message.edit(|m| m.content(string))?;
 });

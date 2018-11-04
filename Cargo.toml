@@ -4,3 +4,10 @@ version = "0.1.0"
 authors = ["Faey Hoffmeyer <hoffmeyer25@gmail.com>"]
 
 [dependencies]
+serenity = "~0.5"
+config = "~0.9"
+env_logger = "~0.4"
+kankyo = "~0.1"
+log = "~0.3"
+rand = "0.5.5"
+chrono = "0.4.6"

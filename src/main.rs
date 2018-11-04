@@ -74,7 +74,7 @@ fn main() {
     client.with_framework(StandardFramework::new()
         .configure(|c| c
             .owners(owners)
-            .prefix("!"))
+            .prefix(".db "))
         .command("ping", |c| c.cmd(commands::meta::ping))
         .command("multiply", |c| c.cmd(commands::math::multiply))
         .command("quit", |c| c

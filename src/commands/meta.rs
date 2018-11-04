@@ -3,6 +3,12 @@ use chrono::Duration;
 use super::super::ShardManagerContainer;
 
 command!(ping(ctx, msg) {
+    // This is done to find the time difference between when sending the the 
+    // message and when discord states the message was sent
+    let start = msg.timestamp.timestamp_millis();
+    let mut message = msg.channel_id.say("Pong!")?;
+    let timestamp = message.timestamp.timestamp_millis() - start;
+
     // The shard manager is an interface for mutating, stopping, restarting, and
     // retrieving information about shards.
     let data = ctx.data.lock();
@@ -49,7 +55,6 @@ command!(ping(ctx, msg) {
     };
 
     // This is done to find the time difference between when sending the the 
-    // message and when discord states the message was sent
     let start = msg.timestamp.timestamp_millis();
     let mut message = msg.channel_id.say("Pong!")?;
     let timestamp = message.timestamp.timestamp_millis() - start;

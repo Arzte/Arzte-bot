@@ -123,7 +123,7 @@ fn main() {
                 .command("ping", |c| c.cmd(commands::meta::ping))
                 .command("multiply", |c| c.cmd(commands::math::multiply)))
             .group("Bot Owner Only", |g| g
-                .command("quit", |c| c.cmd(commands::owner::quit).owners_only(true))),
+                .command("quit", |c| c.cmd(commands::owner::quit)).owners_only(true)),
     );
 
     if let Err(why) = client.start_autosharded() {

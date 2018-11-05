@@ -13,7 +13,9 @@ mod commands;
 
 use env_logger::{Builder, Target};
 use serenity::client::bridge::gateway::ShardManager;
-use serenity::framework::StandardFramework;
+use serenity::framework::standard::{
+    help_commands, Args, CommandOptions, DispatchError, HelpBehaviour, StandardFramework,
+};
 use serenity::http;
 use serenity::model::event::ResumedEvent;
 use serenity::model::gateway::Ready;
@@ -79,10 +81,48 @@ fn main() {
 
     client.with_framework(
         StandardFramework::new()
-            .configure(|c| c.owners(owners).prefix(".db "))
-            .command("ping", |c| c.cmd(commands::meta::ping))
-            .command("multiply", |c| c.cmd(commands::math::multiply))
-            .command("quit", |c| c.cmd(commands::owner::quit).owners_only(true)),
+            .configure(|c| {
+                c.owners(owners)
+                    .allow_whitespace(true)
+                    .on_mention(true)
+                    .prefix(".db")
+                    .no_dm_prefix(true)
+                    .case_insensitivity(true)
+                    .prefix_only_cmd(commands::info::about)
+            }).after(|_ctx, msg, cmd_name, error| {
+                //  Print out an error if it happened
+                if let Err(why) = error {
+                    if let Err(why) = msg.channel_id.say("Unexpected error when exacuting command, please try again later.") {
+                        error!("Error sending message: {}", why);
+                    };
+                    error!("Error in {}: {:?}", cmd_name, why);
+                }
+            })
+            .on_dispatch_error(|_ctx, msg, error| {
+                if let DispatchError::RateLimited(seconds) = error {
+                    let _ = msg
+                        .channel_id
+                        .say(&format!("Try this again in {} seconds.", seconds));
+                }
+            }).customised_help(help_commands::with_embeds, |c| {
+                c.individual_command_tip("If you want more information about a specific command, just pass the command as argument.")
+                .command_not_found_text("Could not find: `{}`.")
+                // Define the maximum Levenshtein-distance between a searched command-name
+                // and commands. If the distance is lower than or equal the set distance,
+                // it will be displayed as a suggestion.
+                // Setting the distance to 0 will disable suggestions.
+                .max_levenshtein_distance(3)
+                // If a user lacks permissions for a command, hide the command.
+                .lacking_permissions(HelpBehaviour::Hide)
+                // If the user is nothing but lacking a certain role, display it.
+                .lacking_role(HelpBehaviour::Nothing)
+                // The last `enum`-variant is `Strike`, which ~~strikes~~ a command.
+                .wrong_channel(HelpBehaviour::Strike)
+            }).command("about", |c| c.cmd(commands::info::about)).group("Ultility", |g| g
+                .command("ping", |c| c.cmd(commands::meta::ping))
+                .command("multiply", |c| c.cmd(commands::math::multiply)))
+            .group("Bot Owner Only", |g| g
+                .command("quit", |c| c.cmd(commands::owner::quit).owners_only(true))),
     );
 
     if let Err(why) = client.start_autosharded() {

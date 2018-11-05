@@ -118,7 +118,8 @@ fn main() {
                 .lacking_role(HelpBehaviour::Nothing)
                 // The last `enum`-variant is `Strike`, which ~~strikes~~ a command.
                 .wrong_channel(HelpBehaviour::Strike)
-            }).command("about", |c| c.cmd(commands::info::about)).group("Ultility", |g| g
+            }).command("about", |c| c.cmd(commands::info::about))
+            .group("Ultility", |g| g
                 .command("ping", |c| c.cmd(commands::meta::ping))
                 .command("multiply", |c| c.cmd(commands::math::multiply)))
             .group("Bot Owner Only", |g| g

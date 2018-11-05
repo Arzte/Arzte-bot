@@ -85,7 +85,7 @@ fn main() {
             .command("quit", |c| c.cmd(commands::owner::quit).owners_only(true)),
     );
 
-    if let Err(why) = client.start() {
+    if let Err(why) = client.start_autosharded() {
         error!("Client error: {:?}", why);
     }
 }

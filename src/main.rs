@@ -14,7 +14,7 @@ mod commands;
 use env_logger::{Builder, Target};
 use serenity::client::bridge::gateway::ShardManager;
 use serenity::framework::standard::{
-    help_commands, Args, CommandOptions, DispatchError, HelpBehaviour, StandardFramework,
+    help_commands, DispatchError, HelpBehaviour, StandardFramework,
 };
 use serenity::http;
 use serenity::model::event::ResumedEvent;

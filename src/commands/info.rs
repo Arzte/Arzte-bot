@@ -10,8 +10,8 @@ use serenity::CACHE;
 command!(guild(_ctx, msg, args) {
     let g = match GuildId(args.single::<u64>()?).to_partial_guild() {
         Ok(partial_guild) => partial_guild,
-        Err(arg_error) => {
-            msg.channel_id.say(format!("Error when phrasing argument for guildID: {:?}", arg_error))?;
+        Err(_arg_error) => {
+            msg.channel_id.say(":no_entry_sign: Invalid server/Not Available")?;
             return Ok(())
         },
     };

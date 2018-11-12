@@ -121,6 +121,7 @@ fn main() {
             }).command("about", |c| c.cmd(commands::info::about))
             .group("Ultility", |g| g
                 .command("ping", |c| c.cmd(commands::meta::ping))
+                .command("guild", |c| c.cmd(commands::info::guild))
                 .command("multiply", |c| c.cmd(commands::math::multiply)))
             .group("Bot Owner Only", |g| g
                 .command("quit", |c| c.cmd(commands::owner::quit)).owners_only(true)),

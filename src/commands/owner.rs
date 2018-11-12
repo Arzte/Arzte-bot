@@ -32,7 +32,7 @@ command!(update(ctx, msg, _args) {
             .output()
             .expect("failed to execute process");
 
-        let output2 = Command::new("cargo")
+        let output2 = Command::new("/home/faey/.cargo/bin/cargo")
             .args(&["build", "--release"])
             .output()
             .expect("failed to execute process");

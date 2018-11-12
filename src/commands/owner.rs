@@ -32,7 +32,12 @@ command!(update(ctx, msg, _args) {
             .output()
             .expect("failed to execute process");
 
-        msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout)))?;
+        let output2 = Command::new("cargo")
+            .args(&["build", "--release"])
+            .output()
+            .expect("failed to execute process");
+
+        msg.channel_id.say(format!("**```\n{}\n\n{}\n```**", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output2.stdout)))?;
 
         // The shard manager is an interface for mutating, stopping, restarting, and
         // retrieving information about shards.

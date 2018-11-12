@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Faey Hoffmeyer <hoffmeyer25@gmail.com>"]
 
 [dependencies]
-serenity = "0.5.10"
+serenity = "0.5.11"
 config = "0.9.1"
 env_logger = "0.5.13"
 kankyo = "0.2.0"

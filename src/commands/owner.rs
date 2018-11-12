@@ -38,6 +38,7 @@ command!(update(ctx, msg, _args) {
 
         let output2 = Command::new("/home/faey/.cargo/bin/cargo")
             .args(&["+stable", "build", "--release"])
+            .current_dir("/home/faey/bot")
             .output()
             .expect("failed to execute process");
         msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output2.stderr)))?;

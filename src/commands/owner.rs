@@ -36,8 +36,8 @@ command!(update(ctx, msg, _args) {
 
         std::thread::sleep(std::time::Duration::from_millis(5000));
 
-        let output2 = Command::new("/home/faey/.cargo/bin/cargo")
-            .args(&["+stable", "build", "--release"])
+        let output2 = Command::new("/bin/bash")
+            .args(&["-C", "cargo", "+stable", "build", "--release"])
             .current_dir("/home/faey/bot")
             .output()
             .expect("failed to execute process");

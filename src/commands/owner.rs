@@ -32,14 +32,15 @@ command!(update(ctx, msg, _args) {
             .output()
             .expect("failed to execute process");
 
+        msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout)))?;
+
+        std::thread::sleep(std::time::Duration::from_millis(5000));
+
         let output2 = Command::new("/home/faey/.cargo/bin/cargo")
             .args(&["+stable", "build", "--release"])
             .output()
             .expect("failed to execute process");
-
-        msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout)))?;
-        std::thread::sleep(std::time::Duration::from_millis(10));
-        msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output2.stderr)));
+        msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output2.stderr)))?;
 
         // The shard manager is an interface for mutating, stopping, restarting, and
         // retrieving information about shards.

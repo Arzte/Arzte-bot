@@ -7,6 +7,7 @@ extern crate config;
 extern crate env_logger;
 extern crate kankyo;
 extern crate rand;
+extern crate sys_info;
 extern crate typemap;
 
 mod commands;

@@ -32,8 +32,8 @@ command!(update(ctx, msg, _args) {
             .output()
             .expect("failed to execute process");
 
-        let output2 = Command::new("/home/faey/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo")
-            .args(&["build", "--release"])
+        let output2 = Command::new("/home/faey/.cargo/bin/cargo")
+            .args(&["+stable", "build", "--release"])
             .output()
             .expect("failed to execute process");
 

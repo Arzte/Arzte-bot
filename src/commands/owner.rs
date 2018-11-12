@@ -32,7 +32,7 @@ command!(update(ctx, msg, _args) {
             .output()
             .expect("failed to execute process");
 
-        message.edit(|m| m.content(format!("Now updating Arzte's Cut Bot, please wait....\n**```\n{}\n```**", String::from_utf8_lossy(&output.stdout))))?;
+        msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout)))?;
 
         // The shard manager is an interface for mutating, stopping, restarting, and
         // retrieving information about shards.

@@ -125,6 +125,7 @@ fn main() {
                 .command("multiply", |c| c.cmd(commands::math::multiply)))
             .group("Bot Owner Only", |g| g
                 .owners_only(true)
+                .command("update", |c| c.cmd(commands::owner::update))
                 .command("quit", |c| c.cmd(commands::owner::quit))),
     );
 

@@ -31,7 +31,7 @@ command!(update(ctx, msg, _args) {
         let shard_manager = match data.get::<ShardManagerContainer>() {
             Some(v) => v,
             None => {
-                let _ = msg.reply("There was a problem getting the shard manager");
+                let _ = message.edit(|m| m.content("There was a problem getting the shard manager"));
 
                 return Ok(());
             },

@@ -85,7 +85,7 @@ fn main() {
                 c.owners(owners)
                     .allow_whitespace(true)
                     .on_mention(true)
-                    .prefix(".db")
+                    .prefix(".d")
                     .no_dm_prefix(true)
                     .case_insensitivity(true)
                     .prefix_only_cmd(commands::info::about)

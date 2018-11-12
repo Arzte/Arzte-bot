@@ -124,7 +124,8 @@ fn main() {
                 .command("guild", |c| c.cmd(commands::info::guild))
                 .command("multiply", |c| c.cmd(commands::math::multiply)))
             .group("Bot Owner Only", |g| g
-                .command("quit", |c| c.cmd(commands::owner::quit)).owners_only(true)),
+                .owners_only(true)
+                .command("quit", |c| c.cmd(commands::owner::quit))),
     );
 
     if let Err(why) = client.start_autosharded() {

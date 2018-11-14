@@ -33,12 +33,11 @@ command!(update(ctx, msg, _args) {
     let github_short = &github_latest_sha[0..7];
 
     if let Some(local_short) = built_info::GIT_VERSION {
-        if local_short != github_short {
-            msg.channel_id.say(format!("There is a update available! :)\nHowever for testing I'm only outputting the values of the short commit I was built on, and GitHub. :(\nlocal: ``{}`` matches github: ``{}``", local_short, github_short))?;
-            return Ok(())
-        } else {
+        if local_short == github_short {
             msg.channel_id.say(format!("There are no updates available, perhaps you forgot to push to Github?\nlocal: ``{}`` matchs github:``{}``", local_short, github_short))?;
             return Ok(())
+        } else {
+            msg.channel_id.say(format!("There is a update available! :)\nHowever for testing I'm only outputting the values of the short commit I was built on, and GitHub. :(\nlocal: ``{}`` matches github: ``{}``", local_short, github_short))?;
         }
     };
 

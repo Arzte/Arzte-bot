@@ -28,25 +28,21 @@ use std::process::Command;
 command!(update(ctx, msg, _args) {
     msg.channel_id.broadcast_typing()?;
 
-    let gith: Github = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
-    let sha_char = gith.sha;
-    let sha = &sha_char[0..7];
+    let github_json: Github = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
+    let github_latest_sha = github_json.sha;
+    let github_short = &github_latest_sha[0..7];
 
-    if let Some(git) = built_info::GIT_VERSION {
-        if git != sha {
-            msg.channel_id.say(format!("There is no updates available, perhaps you forgot to push to Github?\nGit: ``{}`` doesn't match Sha:``{}``", git, sha))?;
+    if let Some(local_short) = built_info::GIT_VERSION {
+        if local_short != github_short {
+            msg.channel_id.say(format!("There is a update available! :)\nHowever for testing I'm only outputting the values of the short commit I was built on, and GitHub. :(\nlocal: ``{}`` matches github: ``{}``", local_short, github_short))?;
             return Ok(())
         } else {
-            msg.channel_id.say(format!("There was a match available, however for testing I'm only outputting the values of git and sha.\ngit: ``{}`` sha: ``{}``", git, sha))?;
+            msg.channel_id.say(format!("There are no updates available, perhaps you forgot to push to Github?\nlocal: ``{}`` matchs github:``{}``", local_short, github_short))?;
             return Ok(())
         }
     };
 
-    return Ok(());
-
     if let Ok(mut message) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {
-
-        return Ok(());
 
         if let Ok(mut cmd_output) = msg.channel_id.say("**```\n \n```**") {
             message.edit(|m| m.content("Pulling in the latest changes from github...."))?;

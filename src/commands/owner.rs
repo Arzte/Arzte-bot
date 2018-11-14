@@ -1,4 +1,4 @@
-use super::super::ShardManagerContainer;
+use core::structs::ShardManagerContainer;
 
 command!(quit(ctx, msg, _args) {
     // The shard manager is an interface for mutating, stopping, restarting, and
@@ -46,7 +46,7 @@ command!(update(ctx, msg, _args) {
                 .output()?;
 
             cmd_output.edit(|m| m.content(format!("**```\n{}\n```**", String::from_utf8_lossy(&output2.stderr))))?;
-            message.edit(|m| m.content("Finished compiling new changes. "))?;
+            message.edit(|m| m.content("Finished compiling new changes."))?;
         }
 
     }

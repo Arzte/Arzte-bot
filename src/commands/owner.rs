@@ -29,11 +29,15 @@ command!(update(ctx, msg, _args) {
     msg.channel_id.broadcast_typing()?;
 
     let gith: Github = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
-    let sha = gith.sha;
+    let sha_char = gith.sha;
+    let sha = &sha_char[0..5];
 
     if let Some(git) = built_info::GIT_VERSION {
         if git != sha {
-            msg.reply("There is no updates available, perhaps you forgot to push to Github?")?;
+            msg.channel_id.say(format!("There is no updates available, perhaps you forgot to push to Github?\nGit: ``{}`` doesn't match Sha:``{}``", git, sha))?;
+            return Ok(())
+        } else {
+            msg.channel_id.say(format!("There was a match available, however for testing I'm only outputting the values of git and sha.\ngit: ``{}`` sha: ``{}``", git, sha))?;
             return Ok(())
         }
     };

@@ -30,7 +30,7 @@ command!(update(ctx, msg, _args) {
 
     let gith: Github = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
     let sha_char = gith.sha;
-    let sha = &sha_char[0..5];
+    let sha = &sha_char[0..7];
 
     if let Some(git) = built_info::GIT_VERSION {
         if git != sha {
@@ -42,7 +42,11 @@ command!(update(ctx, msg, _args) {
         }
     };
 
+    return Ok(());
+
     if let Ok(mut message) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {
+
+        return Ok(());
 
         if let Ok(mut cmd_output) = msg.channel_id.say("**```\n \n```**") {
             message.edit(|m| m.content("Pulling in the latest changes from github...."))?;

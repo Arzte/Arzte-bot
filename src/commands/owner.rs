@@ -21,10 +21,23 @@ command!(quit(ctx, msg, _args) {
     manager.shutdown_all();
 });
 
+use core::built_info;
+use core::structs::Github;
 use std::process::Command;
 
 command!(update(ctx, msg, _args) {
     msg.channel_id.broadcast_typing()?;
+
+    let gith: Github = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
+    let sha = gith.sha;
+
+    if let Some(git) = built_info::GIT_VERSION {
+        if git != sha {
+            msg.reply("There is no updates available, perhaps you forgot to push to Github?")?;
+            return Ok(())
+        }
+    };
+
     if let Ok(mut message) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {
 
         if let Ok(mut cmd_output) = msg.channel_id.say("**```\n \n```**") {

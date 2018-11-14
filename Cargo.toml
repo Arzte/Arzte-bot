@@ -4,12 +4,6 @@ version = "0.0.1-alpha"
 authors = ["Faey Hoffmeyer <hoffmeyer25@gmail.com>"]
 build = "build.rs"
 
-[profile.dev]
-opt-level = 0
-
-[profile.release]
-opt-level = 3
-
 [dependencies]
 serenity = "0.5"
 config = "0.9"
@@ -28,6 +22,12 @@ reqwest = "0.9"
 
 [build-dependencies]
 built = "0.3"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
 
 [replace]
 "openssl:0.9.24" = { git = "https://github.com/ishitatsuyuki/rust-openssl", branch = "0.9.x" }

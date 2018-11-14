@@ -1,5 +1,7 @@
-use super::super::ShardManagerContainer;
-use chrono::Duration;
+extern crate chrono;
+
+use self::chrono::Duration;
+use core::structs::ShardManagerContainer;
 use serenity::client::bridge::gateway::ShardId;
 
 command!(ping(ctx, msg) {

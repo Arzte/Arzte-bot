@@ -1,37 +1,22 @@
+extern crate arzte;
+extern crate serenity;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate serenity;
-extern crate chrono;
-extern crate config;
 extern crate env_logger;
-extern crate kankyo;
-extern crate rand;
-extern crate sys_info;
-extern crate typemap;
 
-mod commands;
-
+use arzte::commands::*;
+use arzte::core::structs::ShardManagerContainer;
 use env_logger::{Builder, Target};
-use serenity::client::bridge::gateway::ShardManager;
 use serenity::framework::standard::{
     help_commands, DispatchError, HelpBehaviour, StandardFramework,
 };
 use serenity::http;
 use serenity::model::event::ResumedEvent;
 use serenity::model::gateway::Ready;
-use serenity::prelude::Mutex;
 use serenity::prelude::*;
 use std::collections::HashSet;
 use std::env;
 use std::sync::Arc;
-use typemap::Key;
-
-pub struct ShardManagerContainer;
-
-impl Key for ShardManagerContainer {
-    type Value = Arc<Mutex<ShardManager>>;
-}
 
 struct Handler;
 
@@ -89,7 +74,7 @@ fn main() {
                     .prefix(".d")
                     .no_dm_prefix(true)
                     .case_insensitivity(true)
-                    .prefix_only_cmd(commands::info::about)
+                    .prefix_only_cmd(info::about)
             }).after(|_ctx, msg, cmd_name, error| {
                 //  Print out an error if it happened
                 if let Err(why) = error {
@@ -119,15 +104,15 @@ fn main() {
                 .lacking_role(HelpBehaviour::Nothing)
                 // The last `enum`-variant is `Strike`, which ~~strikes~~ a command.
                 .wrong_channel(HelpBehaviour::Strike)
-            }).command("about", |c| c.cmd(commands::info::about))
+            }).command("about", |c| c.cmd(info::about))
             .group("Ultility", |g| g
-                .command("ping", |c| c.cmd(commands::meta::ping))
-                .command("guild", |c| c.cmd(commands::info::guild))
-                .command("multiply", |c| c.cmd(commands::math::multiply)))
+                .command("ping", |c| c.cmd(meta::ping))
+                .command("guild", |c| c.cmd(info::guild))
+                .command("multiply", |c| c.cmd(math::multiply)))
             .group("Bot Owner Only", |g| g
                 .owners_only(true)
-                .command("update", |c| c.cmd(commands::owner::update))
-                .command("quit", |c| c.cmd(commands::owner::quit))),
+                .command("update", |c| c.cmd(owner::update))
+                .command("quit", |c| c.cmd(owner::quit))),
     );
 
     if let Err(why) = client.start_autosharded() {

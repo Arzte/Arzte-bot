@@ -53,7 +53,13 @@ command!(update(ctx, msg, _args) {
                         .output()?;
 
                     cmd_output.edit(|m| m.content(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout))))?;
-                    message.edit(|m| m.content("Finished pulling updates from Github."))?;
+                    if output.status.success() {
+                        message.edit(|m| m.content("Finished pulling updates from Github."))?;
+                    } else {
+                        message.edit(|m| m.content("Failed to pull updates from Github."))?;
+                        msg.channel_id.say("Update failed! :(")?;
+                        return Ok(())
+                    }
 
                     message.edit(|m| m.content("Now compiling changes.... (This takes a long time)"))?;
                     msg.channel_id.broadcast_typing()?;
@@ -63,7 +69,14 @@ command!(update(ctx, msg, _args) {
                         .output()?;
 
                     cmd_output.edit(|m| m.content(format!("**```\n{}\n```**", String::from_utf8_lossy(&output2.stderr))))?;
-                    message.edit(|m| m.content("Finished compiling new changes."))?;
+
+                    if output2.status.success() {
+                        message.edit(|m| m.content("Finished compiling new changes."))?;
+                    } else {
+                        message.edit(|m| m.content("Failure while compiling new changes."))?;
+                        msg.channel_id.say("Update failed! :(")?;
+                        return Ok(())
+                    }
                 }
 
             }

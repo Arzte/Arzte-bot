@@ -40,6 +40,7 @@ command!(update(ctx, msg, _args) {
     };
     let ctx = ctx.clone();
     let msg = msg.clone();
+    let msg2 = msg.clone();
 
     thread::spawn(move || -> Result<()> {
             if let Ok(mut message) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {
@@ -89,4 +90,5 @@ command!(update(ctx, msg, _args) {
             }
             Ok(())
     });
+    msg2.channel_id.say("Moar memes please")?;
 });

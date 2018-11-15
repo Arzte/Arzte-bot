@@ -40,6 +40,8 @@ command!(update(ctx, msg, _args) {
             return Ok(())
         }
     };
+    let ctx = ctx.clone();
+    let msg = msg.clone();
 
     thread::spawn(move || -> Result<()> {
             if let Ok(mut message) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {

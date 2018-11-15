@@ -28,8 +28,6 @@ use std::process::Command;
 use std::thread;
 
 command!(update(ctx, msg, _args) {
-    msg.channel_id.broadcast_typing()?;
-
     let github_json: Github = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
     let github_latest_sha = github_json.sha;
     let github_short = &github_latest_sha[0..7];
@@ -56,9 +54,8 @@ command!(update(ctx, msg, _args) {
                     cmd_output.edit(|m| m.content(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout))))?;
                     message.edit(|m| m.content("Finished pulling updates from Github."))?;
 
-                    std::thread::sleep(std::time::Duration::from_millis(1000));
-
                     message.edit(|m| m.content("Now compiling changes.... (This takes a long time)"))?;
+                    msg.channel_id.broadcast_typing()?;
                     let output2 = Command::new("/home/faey/.cargo/bin/cargo")
                         .args(&["+stable", "build", "--release"])
                         .current_dir("/home/faey/bot")

@@ -23,6 +23,7 @@ command!(quit(ctx, msg, _args) {
 
 use core::built_info;
 use core::structs::Github;
+use serenity::Result;
 use std::process::Command;
 use std::thread;
 
@@ -40,7 +41,7 @@ command!(update(ctx, msg, _args) {
         }
     };
 
-    thread::spawn(move || {
+    thread::spawn(move || -> Result<()> {
             if let Ok(mut message) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {
 
                 if let Ok(mut cmd_output) = msg.channel_id.say("**```\n \n```**") {

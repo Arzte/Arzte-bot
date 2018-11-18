@@ -100,7 +100,6 @@ pub struct Stats {
 
 // This is the struct and implementation for a ShardManager Container,
 // which allows for non serenity items to access the shardmanger,
-// after locking it.
 
 use serenity::client::bridge::gateway::ShardManager;
 use serenity::prelude::Mutex;

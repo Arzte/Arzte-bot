@@ -7,7 +7,6 @@ command!(about(_ctx, msg, _args) {
 
 use serenity::model::id::GuildId;
 use serenity::CACHE;
-// use serenity::builder::CreateEmbed;
 
 command!(guild(_ctx, msg, args) {
     let g = match GuildId(args.single::<u64>()?).to_partial_guild() {

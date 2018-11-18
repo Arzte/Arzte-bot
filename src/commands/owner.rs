@@ -1,8 +1,6 @@
 use core::structs::ShardManagerContainer;
 
 command!(quit(ctx, msg, _args) {
-    // The shard manager is an interface for mutating, stopping, restarting, and
-    // retrieving information about shards.
     let data = ctx.data.lock();
 
     let shard_manager = match data.get::<ShardManagerContainer>() {
@@ -81,8 +79,6 @@ command!(update(ctx, msg, _args) {
             }
 
             if let Ok(mut shard) = msg.channel_id.say("Getting shard manager, then telling the bot to shutdown...") {
-                // The shard manager is an interface for mutating, stopping, restarting, and
-                // retrieving information about shards.
                 let data = ctx.data.lock();
 
                 let shard_manager = match data.get::<ShardManagerContainer>() {

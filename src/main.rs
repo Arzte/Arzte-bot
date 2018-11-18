@@ -38,12 +38,10 @@ fn main() {
     }
     builder.init();
 
-    // Settings file, used currently for token
     let mut settings = config::Config::default();
     settings
         .merge(config::File::with_name("Settings"))
         .expect("No file called Settings.toml in same folder as bot");
-    // set settings to variables that can be accessed.
     let token = settings
         .get_str("token")
         .expect("No token/token value set in Settings file");
@@ -85,6 +83,7 @@ fn main() {
                 }
             })
             .on_dispatch_error(|_ctx, msg, error| {
+                // if there was an error related to ratelimiting, send a message about it.
                 if let DispatchError::RateLimited(seconds) = error {
                     let _ = msg
                         .channel_id
@@ -93,16 +92,9 @@ fn main() {
             }).customised_help(help_commands::with_embeds, |c| {
                 c.individual_command_tip("If you want more information about a specific command, just pass the command as argument.")
                 .command_not_found_text("Could not find: `{}`.")
-                // Define the maximum Levenshtein-distance between a searched command-name
-                // and commands. If the distance is lower than or equal the set distance,
-                // it will be displayed as a suggestion.
-                // Setting the distance to 0 will disable suggestions.
                 .max_levenshtein_distance(3)
-                // If a user lacks permissions for a command, hide the command.
                 .lacking_permissions(HelpBehaviour::Hide)
-                // If the user is nothing but lacking a certain role, display it.
                 .lacking_role(HelpBehaviour::Nothing)
-                // The last `enum`-variant is `Strike`, which ~~strikes~~ a command.
                 .wrong_channel(HelpBehaviour::Strike)
             }).command("about", |c| c.cmd(info::about))
             .group("Ultility", |g| g

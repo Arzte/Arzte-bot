@@ -103,7 +103,7 @@ fn main() {
                 .command("multiply", |c| c.cmd(math::multiply)))
             .group("Bot Owner Only", |g| g
                 .owners_only(true)
-                .command("update", |c| c.cmd(owner::update))
+                .command("update", |c| c.cmd(owner::update).known_as("u"))
                 .command("quit", |c| c.cmd(owner::quit))),
     );
 

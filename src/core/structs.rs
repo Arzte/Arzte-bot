@@ -6,7 +6,7 @@ pub struct Github {
     node_id: String,
     commit: Commit,
     url: String,
-    html_url: String,
+    pub html_url: String,
     comments_url: String,
     author: GithubAuthor,
     committer: GithubAuthor,
@@ -16,7 +16,7 @@ pub struct Github {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct GithubAuthor {
+struct GithubAuthor {
     login: String,
     id: i64,
     node_id: String,
@@ -42,7 +42,7 @@ pub struct GithubAuthor {
 pub struct Commit {
     author: CommitAuthor,
     committer: CommitAuthor,
-    message: String,
+    pub message: String,
     tree: Tree,
     url: String,
     comment_count: i64,
@@ -50,20 +50,20 @@ pub struct Commit {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct CommitAuthor {
+struct CommitAuthor {
     name: String,
     email: String,
     date: String,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Tree {
+struct Tree {
     sha: String,
     url: String,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Verification {
+struct Verification {
     verified: bool,
     reason: String,
     signature: Option<serde_json::Value>,
@@ -71,7 +71,7 @@ pub struct Verification {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct File {
+struct File {
     sha: String,
     filename: String,
     status: String,
@@ -85,14 +85,14 @@ pub struct File {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Parent {
+struct Parent {
     sha: String,
     url: String,
     html_url: String,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Stats {
+struct Stats {
     total: i64,
     additions: i64,
     deletions: i64,

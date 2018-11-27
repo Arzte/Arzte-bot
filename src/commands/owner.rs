@@ -79,7 +79,7 @@ command!(update(ctx, msg, _args) {
                 let shard_manager = match data.get::<ShardManagerContainer>() {
                     Some(v) => v,
                     None => {
-                        let _ = msg_shard.edit(|m| m.content("There was a problem getting the shard manager"));
+                        let _ = message.edit(|m| m.content("There was a problem getting the shard manager"));
 
                         return Ok(())
                     },
@@ -87,7 +87,7 @@ command!(update(ctx, msg, _args) {
 
                 let mut manager = shard_manager.lock();
 
-                msg_shard.edit(|m| m.content("Updated! Restarting now!"))?;
+                message.edit(|m| m.content("Updated! Restarting now!"))?;
 
                 manager.shutdown_all();
             }

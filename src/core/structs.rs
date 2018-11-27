@@ -4,7 +4,7 @@
 pub struct Github {
     pub sha: String,
     node_id: String,
-    commit: Commit,
+    pub commit: Commit,
     url: String,
     pub html_url: String,
     comments_url: String,

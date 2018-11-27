@@ -35,8 +35,9 @@ command!(update(ctx, msg, _args) {
             if let Ok(mut msg_latest) = msg.reply("Already at latest version!") {
                 std::thread::sleep(std::time::Duration::from_millis(3000));
                 let _latest_delete_msg = msg_latest.delete();
-                let _command_delete_msg = msg.delete();
-                return Ok(())
+                if let Err(_missing_perms) = msg.delete() {
+                    msg.react("❌")?;
+                }
             }
             return Ok(())
         }

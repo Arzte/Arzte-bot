@@ -32,7 +32,7 @@ command!(update(ctx, msg, _args) {
 
     if let Some(local_short) = built_info::GIT_VERSION {
         if local_short == github_short {
-            if let Ok(mut msg_latest) = msg.channel_id.say("Already at latest version!") {
+            if let Ok(mut msg_latest) = msg.reply("Already at latest version!") {
                 std::thread::sleep(std::time::Duration::from_millis(3000));
                 let _latest_delete_msg = msg_latest.delete();
                 let _command_delete_msg = msg.delete();

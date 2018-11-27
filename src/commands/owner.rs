@@ -73,7 +73,7 @@ command!(update(ctx, msg, _args) {
                     return Ok(())
                 }
 
-                message.edit(|m| m.content("Getting shard manager, then telling the bot to shutdown..."))
+                message.edit(|m| m.content("Getting shard manager, then telling the bot to shutdown..."));
                 let data = ctx.data.lock();
 
                 let shard_manager = match data.get::<ShardManagerContainer>() {

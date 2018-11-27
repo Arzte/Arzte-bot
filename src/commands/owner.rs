@@ -42,18 +42,16 @@ command!(update(ctx, msg, _args) {
     thread::spawn(move || -> Result<()> {
             if let Ok(mut message) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {
 
-                if let Ok(mut cmd_output) = msg.channel_id.say("**```\n \n```**") {
                     message.edit(|m| m.content("Pulling in the latest changes from github...."))?;
 
                     let output = Command::new("git")
                         .args(&["pull", "-ff"])
                         .output()?;
 
-                    cmd_output.edit(|m| m.content(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout))))?;
                     if output.status.success() {
                         message.edit(|m| m.content("Finished pulling updates from Github."))?;
                     } else {
-                        message.edit(|m| m.content("Failed to pull updates from Github."))?;
+                        msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout)))?;
                         msg.channel_id.say("Update failed! :(")?;
                         return Ok(())
                     }
@@ -65,16 +63,13 @@ command!(update(ctx, msg, _args) {
                         .current_dir("/home/faey/bot")
                         .output()?;
 
-                    cmd_output.edit(|m| m.content(format!("**```\n{}\n```**", String::from_utf8_lossy(&output2.stderr))))?;
-
                     if output2.status.success() {
                         message.edit(|m| m.content("Finished compiling new changes."))?;
                     } else {
-                        message.edit(|m| m.content("Failure while compiling new changes."))?;
+                        msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output2.stderr)))?;
                         msg.channel_id.say("Update failed! :(")?;
                         return Ok(())
                     }
-                }
 
             }
 

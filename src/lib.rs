@@ -4,7 +4,6 @@
 extern crate log;
 #[macro_use]
 extern crate serenity;
-extern crate chrono;
 extern crate config;
 extern crate kankyo;
 extern crate rand;

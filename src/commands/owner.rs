@@ -40,23 +40,24 @@ command!(update(ctx, msg, _args) {
     let msg = msg.clone();
 
     thread::spawn(move || -> Result<()> {
-            if let Ok(mut message) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {
+            if let Ok(mut msg_status) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {
 
-                    message.edit(|m| m.content("Pulling in the latest changes from github...."))?;
+                    msg_status.edit(|m| m.content("Pulling in the latest changes from github...."))?;
 
                     let output = Command::new("git")
                         .args(&["pull", "-ff"])
                         .output()?;
 
                     if output.status.success() {
-                        message.edit(|m| m.content("Finished pulling updates from Github."))?;
+                        msg_status.edit(|m| m.content("Finished pulling updates from Github."))?;
                     } else {
+                        msg_status.edit(|m| m.content("Failed to pull updates from Github."))?;
                         msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout)))?;
                         msg.channel_id.say("Update failed! :(")?;
                         return Ok(())
                     }
 
-                    message.edit(|m| m.content("Now compiling changes.... (This takes a long time)"))?;
+                    msg_status.edit(|m| m.content("Now compiling changes.... (This takes a long time)"))?;
                     msg.channel_id.broadcast_typing()?;
                     let output2 = Command::new("/home/faey/.cargo/bin/cargo")
                         .args(&["+stable", "build", "--release"])
@@ -64,8 +65,9 @@ command!(update(ctx, msg, _args) {
                         .output()?;
 
                     if output2.status.success() {
-                        message.edit(|m| m.content("Finished compiling new changes."))?;
+                        msg_status.edit(|m| m.content("Finished compiling new changes."))?;
                     } else {
+                        msg_status.edit(|m| m.content("Failure while compiling new changes."))?;
                         msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output2.stderr)))?;
                         msg.channel_id.say("Update failed! :(")?;
                         return Ok(())
@@ -73,13 +75,13 @@ command!(update(ctx, msg, _args) {
 
             }
 
-            if let Ok(mut shard) = msg.channel_id.say("Getting shard manager, then telling the bot to shutdown...") {
+            if let Ok(mut msg_shard) = msg.channel_id.say("Getting shard manager, then telling the bot to shutdown...") {
                 let data = ctx.data.lock();
 
                 let shard_manager = match data.get::<ShardManagerContainer>() {
                     Some(v) => v,
                     None => {
-                        let _ = shard.edit(|m| m.content("There was a problem getting the shard manager"));
+                        let _ = msg_shard.edit(|m| m.content("There was a problem getting the shard manager"));
 
                         return Ok(())
                     },
@@ -87,7 +89,7 @@ command!(update(ctx, msg, _args) {
 
                 let mut manager = shard_manager.lock();
 
-                shard.edit(|m| m.content("Updated! Restarting now!"))?;
+                msg_shard.edit(|m| m.content("Updated! Restarting now!"))?;
 
                 manager.shutdown_all();
             }

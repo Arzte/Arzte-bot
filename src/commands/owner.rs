@@ -32,7 +32,7 @@ command!(update(ctx, msg, _args) {
 
     if let Some(local_short) = built_info::GIT_VERSION {
         if local_short == github_short {
-            msg.channel_id.say(format!("Already at latest version! \n(```{}```)\n{}", github_json.commit.message, github_json.html_url))?;
+            msg.channel_id.say(format!("Already at latest version!\n{}", github_json.html_url))?;
             return Ok(())
         }
     };

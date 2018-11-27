@@ -42,7 +42,7 @@ struct GithubAuthor {
 pub struct Commit {
     author: CommitAuthor,
     committer: CommitAuthor,
-    pub message: String,
+    message: String,
     tree: Tree,
     url: String,
     comment_count: i64,

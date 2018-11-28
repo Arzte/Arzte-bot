@@ -100,7 +100,7 @@ fn main() {
             .group("Ultility", |g| g
                 .command("ping", |c| c.cmd(meta::ping))
                 .command("guild", |c| c.cmd(info::guild))
-                .command("multiply", |c| c.cmd(math::multiply)))
+                .command("math", |c| c.cmd(math::math)))
             .group("Bot Owner Only", |g| g
                 .owners_only(true)
                 .command("update", |c| c.cmd(owner::update).known_as("u"))

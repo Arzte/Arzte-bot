@@ -1,7 +1,12 @@
-use calc::eval;
-
 command!(math(_ctx, msg, args) {
-    let eval = eval(&args.full())?;
+    let value = meval::eval_str(&args.full());
 
-    let _ = msg.channel_id.say(eval);
+    if let Err(rr) = value {
+        let _ = msg.channel_id.say(format!("```{:?}```", rr));
+        return Ok(())
+    };
+    if let Ok(orr) = value {
+        let _ = msg.channel_id.say(orr);
+        return Ok(())
+    };
 });

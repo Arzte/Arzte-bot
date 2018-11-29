@@ -14,7 +14,6 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate sys_info;
 extern crate typemap;
-extern crate calc;
-
+extern crate meval;
 pub mod commands;
 pub mod core;

@@ -58,7 +58,7 @@ command!(update(ctx, msg, _args) {
                     message.edit(|m| m.content("Finished pulling updates from Github."))?;
                 } else {
                     message.edit(|m| m.content("Failed to pull updates from Github."))?;
-                    msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stdout)))?;
+                    msg.channel_id.say(format!("**```\n{}\n```**", String::from_utf8_lossy(&output.stderr)))?;
                     msg.channel_id.say("Update failed! :(")?;
                     return Ok(())
                 }

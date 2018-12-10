@@ -3,6 +3,7 @@ extern crate serenity;
 #[macro_use]
 extern crate log;
 extern crate env_logger;
+extern crate sentry;
 
 use serenity::model::id::ChannelId;
 use arzte::commands::*;
@@ -32,6 +33,10 @@ impl EventHandler for Handler {
 }
 
 fn main() {
+    // Sentry error stuffs
+    let _guard = sentry::init("https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627");
+    
+    // env_logger setup stuffs
     let mut builder = Builder::new();
     builder.target(Target::Stdout);
     if env::var("LOG").is_ok() {

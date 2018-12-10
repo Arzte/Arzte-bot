@@ -4,6 +4,7 @@ extern crate serenity;
 extern crate log;
 extern crate env_logger;
 
+use serenity::model::id::ChannelId;
 use arzte::commands::*;
 use arzte::core::structs::ShardManagerContainer;
 use env_logger::{Builder, Target};
@@ -76,8 +77,11 @@ fn main() {
             }).after(|_ctx, msg, cmd_name, error| {
                 //  Print out an error if it happened
                 if let Err(why) = error {
-                    if let Err(why) = msg.channel_id.say("Unexpected error when exacuting command, please try again later.") {
-                        error!("Error sending message: {}", why);
+                    if let Err(msg_why) = msg.channel_id.say("Unexpected error when exacuting command, please try again later.") {
+                        error!("Error sending message: {:#?}", msg_why);
+                    };
+                    if let Err(msg_why) = ChannelId(521_537_902_291_976_196).send_message(|m| m.content(format!("An unaccounted for error occured!! pls fix: \n```rs{:#?}```", why))) {
+                        error!("Error sending detail error message: {:#?}", msg_why);
                     };
                     error!("Error in {}: {:?}", cmd_name, why);
                 }

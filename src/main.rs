@@ -46,6 +46,10 @@ fn main() {
     if env::var("LOG").is_ok() {
         builder.parse(&env::var("LOG").unwrap());
     }
+
+    sentry::configure_scope(|scope| {
+        scope.set_level(Some(sentry::Level::Warning));
+    });
     sentry::integrations::env_logger::init(Some(builder.build()), Default::default());
     sentry::integrations::panic::register_panic_handler();
 
@@ -88,13 +92,13 @@ fn main() {
             }).after(|_ctx, msg, cmd_name, error| {
                 //  Print out an error if it happened
                 if let Err(why) = error {
-                    if let Err(msg_why) = msg.channel_id.say("Unexpected error when exacuting command, please try again later.") {
+                    if let Err(msg_why) = msg.channel_id.say("An unexpected error occured when running this command, please try again later.") {
                         error!("Error sending message: {:#?}", msg_why);
                     };
-                    if let Err(msg_why) = ChannelId(521_537_902_291_976_196).send_message(|m| m.content(format!("An unaccounted for error occured!! pls fix: \n```rs\n{:#?}\n```", why))) {
-                        error!("Error sending detail error message: {:#?}", msg_why);
+                    if let Err(msg_why) = ChannelId(521_537_902_291_976_196).send_message(|m| m.content(format!("An unaccounted for error occured in ``{}``, details on Sentry.", cmd_name))) {
+                        error!("Error sending detailed error message: {:#?}", msg_why);
                     };
-                    error!("Error in {}: {:?}", cmd_name, why);
+                    error!("{} has encountered an error:: {:?}", cmd_name, why);
                 }
             })
             .on_dispatch_error(|_ctx, msg, error| {

@@ -33,7 +33,12 @@ impl EventHandler for Handler {
 
 fn main() {
     // Sentry error stuffs
-    let _guard = sentry::init("https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627");
+    let _guard = sentry::init(("https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627", sentry::ClientOptions {
+        max_breadcrumbs: 50,
+        debug: true,
+        environment: Some("staging".into()),
+        ..Default::default()
+    }));
     
     // env_logger setup stuffs
     let mut builder = Builder::new();
@@ -41,7 +46,9 @@ fn main() {
     if env::var("LOG").is_ok() {
         builder.parse(&env::var("LOG").unwrap());
     }
-    builder.init();
+    sentry::integrations::env_logger::init(Some(builder.build()), Default::default());
+    sentry::integrations::panic::register_panic_handler();
+
 
     let mut settings = config::Config::default();
     settings

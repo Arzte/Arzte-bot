@@ -3,6 +3,7 @@ name = "arzte"
 version = "0.0.1-alpha"
 authors = ["Faey Hoffmeyer <hoffmeyer25@gmail.com>"]
 build = "build.rs"
+edition = "2018"
 
 [dependencies]
 serenity = "0.5"

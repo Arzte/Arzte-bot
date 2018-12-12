@@ -1,4 +1,5 @@
-use core::structs::ShardManagerContainer;
+use crate::core::structs::ShardManagerContainer;
+use std::time::Duration;
 
 command!(quit(ctx, msg, _args) {
     let data = ctx.data.lock();
@@ -19,11 +20,9 @@ command!(quit(ctx, msg, _args) {
     manager.shutdown_all();
 });
 
-use core::built_info;
-use core::structs::Github;
+use crate::core::{built_info, structs::Github};
 use serenity::Result;
-use std::process::Command;
-use std::thread;
+use std::{thread, process::Command};
 
 command!(update(ctx, msg, _args) {
     let github_json: Github = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;

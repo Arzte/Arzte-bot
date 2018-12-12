@@ -5,17 +5,16 @@ extern crate log;
 extern crate env_logger;
 extern crate sentry;
 
-use serenity::model::id::ChannelId;
-use arzte::commands::*;
-use arzte::core::structs::ShardManagerContainer;
+use serenity::{http, 
+    prelude::*, 
+    model::event::ResumedEvent, 
+    model::gateway::Ready, 
+    model::id::ChannelId, 
+    framework::standard::{
+        help_commands, DispatchError, HelpBehaviour, StandardFramework,
+    }};
+use arzte::{commands::*, core::structs::ShardManagerContainer};
 use env_logger::{Builder, Target};
-use serenity::framework::standard::{
-    help_commands, DispatchError, HelpBehaviour, StandardFramework,
-};
-use serenity::http;
-use serenity::model::event::ResumedEvent;
-use serenity::model::gateway::Ready;
-use serenity::prelude::*;
 use std::collections::HashSet;
 use std::env;
 use std::sync::Arc;

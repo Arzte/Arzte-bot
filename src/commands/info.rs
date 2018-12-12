@@ -1,4 +1,4 @@
-use core::built_info;
+use crate::core::built_info;
 
 command!(about(_ctx, msg, _args) {
     msg.channel_id.say(format!("{} (v ``{}``) is a small utility bot, developed by <@77812253511913472>, with help from serenity and it's resources.\n\n\

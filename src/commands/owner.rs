@@ -1,5 +1,6 @@
 use crate::core::structs::ShardManagerContainer;
 use std::time::Duration;
+use sentry::Hub;
 
 command!(quit(ctx, msg, _args) {
     let data = ctx.data.lock();
@@ -16,6 +17,11 @@ command!(quit(ctx, msg, _args) {
     let mut manager = shard_manager.lock();
 
     msg.reply("Shutting down!")?;
+
+
+    if let Some(client) = Hub::current().client() {
+        client.close(Some(Duration::from_secs(2)));
+    }
 
     manager.shutdown_all();
 });
@@ -93,6 +99,10 @@ command!(update(ctx, msg, _args) {
                 let mut manager = shard_manager.lock();
 
                 message.edit(|m| m.content("Updated! Restarting now!"))?;
+
+                if let Some(client) = Hub::current().client() {
+                    client.close(Some(Duration::from_secs(2)));
+                }
 
                 manager.shutdown_all();
             }

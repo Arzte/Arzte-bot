@@ -9,7 +9,17 @@ use serenity::model::id::GuildId;
 use serenity::CACHE;
 
 command!(guild(_ctx, msg, args) {
-    let g = match GuildId(args.single::<u64>()?).to_partial_guild() {
+    let guild_id = if args.is_empty() {
+        if let Some(gid) = msg.guild_id {
+            *gid.as_u64()
+        } else {
+            msg.channel_id.say("I was unable to get the current guild id, try again later.")?;
+            return Ok(())
+        }
+    } else {
+        args.single::<u64>()?
+    };
+    let g = match GuildId(guild_id).to_partial_guild() {
         Ok(partial_guild) => partial_guild,
         Err(_arg_error) => {
             msg.channel_id.say(":no_entry_sign: Invalid server/Not Available")?;

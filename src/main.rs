@@ -2,13 +2,12 @@ extern crate arzte;
 extern crate serenity;
 #[macro_use]
 extern crate log;
-extern crate env_logger;
+extern crate pretty_env_logger;
 extern crate sentry;
 
 use serenity::model::id::ChannelId;
 use arzte::commands::*;
 use arzte::core::structs::ShardManagerContainer;
-use env_logger::{Builder, Target};
 use serenity::framework::standard::{
     help_commands, DispatchError, HelpBehaviour, StandardFramework,
 };
@@ -32,17 +31,14 @@ impl EventHandler for Handler {
     }
 }
 
-fn main() {
+fn main() -> Result<(), log::SetLoggerError>{
     // Sentry error stuffs
     let _guard = sentry::init("https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627");
     
-    // env_logger setup stuffs
-    let mut builder = Builder::new();
-    builder.target(Target::Stdout);
-    if env::var("LOG").is_ok() {
-        builder.parse(&env::var("LOG").unwrap());
-    }
-    builder.init();
+    let mut log_builder = pretty_env_logger::formatted_builder()?;
+    log_builder.parse("info");
+    sentry::integrations::env_logger::init(Some(log_builder.build()), Default::default());
+    sentry::integrations::panic::register_panic_handler();
 
     let mut settings = config::Config::default();
     settings
@@ -119,4 +115,6 @@ fn main() {
     if let Err(why) = client.start_autosharded() {
         error!("Client error: {:?}", why);
     }
+
+    Ok(())
 }

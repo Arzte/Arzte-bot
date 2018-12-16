@@ -7,10 +7,16 @@ cache:
   - cargo
   - npm
 
+  before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
+
 before_script:
   - export PATH=$HOME/.cargo/bin:$PATH
-  - cargo install cargo-update || echo "cargo-update already installed"
-  - cargo install-update -a # update outdated cached binaries
+# Disabling these for now as I'm not installing anything else, so this is pointless wasted CI time building this.
+# (diseal might be a reason that I'd want this later one)
+#  - cargo install cargo-update || echo "cargo-update already installed"
+#  - cargo install-update -a # update outdated cached binaries
 
 script:
   - cargo build

@@ -26,7 +26,6 @@ before_deploy:
   - export SENTRY_ORG=myself-0q
   - export SENTRY_PROJECT=arzte-cute-bot
   - export VERSION=`./node_modules/.bin/sentry-cli releases propose-version`
-  - ./node_modules/.bin/sentry-cli releases set-commits "$VERSION" --auto
   - ./node_modules/.bin/sentry-cli releases new "$VERSION"
   - sh ci/before_deploy.sh
 

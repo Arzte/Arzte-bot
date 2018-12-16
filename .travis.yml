@@ -23,7 +23,7 @@ script:
 
 before_deploy:
   - npm install @sentry/cli
-  - export VERSION=`sentry-cli releases propose-version`
+  - export VERSION=`./node_modules/.bin/sentry-cli releases propose-version`
   - ./node_modules/.bin/sentry-cli releases new "$VERSION"
   - sh ci/before_deploy.sh
 

@@ -45,11 +45,10 @@ deploy:
     condition: $TRAVIS_RUST_VERSION = stable
     tags: true
   provider: releases
+  skip_cleanup: true
 
 after_deploy:
   - ./node_modules/.bin/sentry-cli releases finalize "$VERSION"
-
-skip_cleanup: true
 
 notifications:
   email: false

@@ -2,11 +2,11 @@
 // https://api.github.com/repos/:owner/:repo/commits/:commit
 #[derive(Serialize, Deserialize)]
 pub struct GithubCommit {
-    pub sha: String,
+    pub(crate) sha: String,
     node_id: String,
-    pub commit: Commit,
+    pub(crate) commit: Commit,
     url: String,
-    pub html_url: String,
+    html_url: String,
     comments_url: String,
     author: GithubCommitAuthor,
     committer: GithubCommitAuthor,

@@ -1,6 +1,6 @@
 use crate::core::structs::ShardManagerContainer;
-use std::time::Duration;
 use sentry::Hub;
+use std::time::Duration;
 
 command!(quit(ctx, msg, _args) {
     let data = ctx.data.lock();

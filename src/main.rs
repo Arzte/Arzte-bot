@@ -101,7 +101,7 @@ fn main() {
                         error!("Error sending message: {:#?}", msg_why);
                     };
                     if let Err(msg_why) = ChannelId(521_537_902_291_976_196).send_message(|m| m.content(format!("An unaccounted for error occured in ``{}``, details on Sentry.", cmd_name))) {
-                        error!("Error sending detailed error message: {:#?}", msg_why);
+                        error!("Error sending error message: {:#?}", msg_why);
                     };
                     error!("{} has encountered an error:: {:?}", cmd_name, why);
                 }

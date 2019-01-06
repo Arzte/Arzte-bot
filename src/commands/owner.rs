@@ -26,9 +26,10 @@ command!(quit(ctx, msg, _args) {
     manager.shutdown_all();
 });
 
-use crate::core::{built_info, structs::Github};
+use crate::core::{
 use serenity::Result;
-use std::{thread, process::Command};
+    error::Result,
+};
 
 command!(update(ctx, msg, _args) {
     let github_json: Github = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;

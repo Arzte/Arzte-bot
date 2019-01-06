@@ -111,3 +111,9 @@ pub struct ShardManagerContainer;
 impl Key for ShardManagerContainer {
     type Value = Arc<Mutex<ShardManager>>;
 }
+
+pub struct SettingsContainer;
+
+impl Key for SettingsContainer {
+    type Value = Arc<Mutex<config::Config>>;
+}

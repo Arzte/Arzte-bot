@@ -13,7 +13,7 @@ use serenity::{http,
     framework::standard::{
         help_commands, DispatchError, HelpBehaviour, StandardFramework,
     }};
-use arzte::{commands::*, core::structs::ShardManagerContainer};
+use arzte::{commands::*, core::structs::{ShardManagerContainer, SettingsContainer}};
 use env_logger::{Builder, Target};
 use std::collections::HashSet;
 use std::env;
@@ -54,19 +54,24 @@ fn main() {
     sentry::integrations::panic::register_panic_handler();
 
 
-    let mut settings = config::Config::default();
-    settings
-        .merge(config::File::with_name("Settings"))
-        .expect("No file called Settings.toml in same folder as bot");
-    let token = settings
-        .get_str("token")
-        .expect("No token/token value set in Settings file");
+    let config = Arc::new(Mutex::new(config::Config::default()));
+
+    let token = {
+        let mut settings = config.lock();
+        settings
+            .merge(config::File::with_name("settings"))
+            .expect("No file called Settings.toml in same folder as bot");
+        settings
+            .get_str("token")
+            .expect("No token/token value set in Settings file")
+    };
 
     let mut client = Client::new(&token, Handler).expect("Err creating client");
 
     {
         let mut data = client.data.lock();
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
+        data.insert::<SettingsContainer>(Arc::clone(&config));
     }
 
     let owners = match http::get_current_application_info() {

@@ -15,7 +15,8 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate sys_info;
 extern crate typemap;
-extern crate meval;
+#[macro_use]
+extern crate asciimath;
 extern crate sentry;
 //#[macro_use]
 // The above macro_use is commented out as it is currently not used, but will be in the future.

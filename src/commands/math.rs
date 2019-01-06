@@ -1,5 +1,8 @@
+use asciimath::eval;
+
 command!(math(_ctx, msg, args) {
-    let value = meval::eval_str(&args.full());
+    let scope_empty = scope!{};
+    let value = eval(&args.full(), &scope_empty);
 
     if let Err(rr) = value {
         let _ = msg.channel_id.say(format!("```{:?}```", rr));

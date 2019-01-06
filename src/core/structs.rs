@@ -1,22 +1,22 @@
 // These are all structs for the github response to
 // https://api.github.com/repos/:owner/:repo/commits/:commit
 #[derive(Serialize, Deserialize)]
-pub struct Github {
+pub struct GithubCommit {
     pub sha: String,
     node_id: String,
     pub commit: Commit,
     url: String,
     pub html_url: String,
     comments_url: String,
-    author: GithubAuthor,
-    committer: GithubAuthor,
+    author: GithubCommitAuthor,
+    committer: GithubCommitAuthor,
     parents: Vec<Parent>,
     stats: Stats,
     files: Vec<File>,
 }
 
 #[derive(Serialize, Deserialize)]
-struct GithubAuthor {
+struct GithubCommitAuthor {
     login: String,
     id: i64,
     node_id: String,

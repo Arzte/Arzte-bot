@@ -27,84 +27,120 @@ command!(quit(ctx, msg, _args) {
 });
 
 use crate::core::{
-use serenity::Result;
+    built_info,
     error::Result,
+    structs::{GithubCommit, GithubRelease, SettingsContainer},
+    utils::dn_file,
 };
+use std::{process::Command, thread};
 
 command!(update(ctx, msg, _args) {
-    let github_json: Github = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
-    let github_latest_sha = github_json.sha;
-    let github_short = &github_latest_sha[0..7];
+    let github_commit_json: GithubCommit = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
+    let github_release_json: GithubRelease = reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/releases/latest")?.json()?;
+    let github_commit_sha = github_commit_json.sha;
+    let github_release_tag = github_release_json.tag_name.as_str();
+    let github_short = &github_commit_sha[0..7];
 
-    if let Some(local_short) = built_info::GIT_VERSION {
-        if local_short == github_short {
+    debug!("Getting debug state...");
+    let debug = {
+        debug!("Getting serenity's data container lock...");
+        let data = ctx.data.lock();
+
+        debug!("Getting settings mutex from data...");
+        let settings_manager = {
+            match data.get::<SettingsContainer>() {
+            Some(v) => v,
+            None => {
+                error!("Error getting settings container.");
+
+                return Ok(())
+                },
+            }
+        };
+
+        debug!("Getting lock for settings manager");
+        let settings = settings_manager.lock();
+        settings.get_bool("debug")?
+    };
+
+    debug!("checking debug mode");
+    if let (false, Some(local_git)) = (debug, built_info::GIT_VERSION) {
+        if local_git == github_short || local_git == github_release_tag {
             if let Ok(mut msg_latest) = msg.reply("Already at latest version!") {
-                std::thread::sleep(std::time::Duration::from_millis(3000));
+                std::thread::sleep(std::time::Duration::from_secs(3));
                 let _latest_delete_msg = msg_latest.delete();
-                if let Err(_missing_perms) = msg.delete() {
-                    msg.react("❌")?;
-                }
+                if let Err(_missing_perms) = msg.delete() {}
             }
             return Ok(())
+        } else if github_release_json.assets.is_empty() {
+            if let Ok(mut msg_latest) = msg.reply("There's a release, however Travis hasn't successfully built the new version yet, perhaps try again in a few minutes?") {
+                std::thread::sleep(std::time::Duration::from_secs(10));
+                let _latest_delete_msg = msg_latest.delete();
+                if let Err(_missing_perms) = msg.delete() {}
+            }
         }
     };
+
+    let mut github_release_download =  &github_release_json.assets[0].browser_download_url;
+    let github_release_download = github_release_download.clone();
     let ctx = ctx.clone();
     let msg = msg.clone();
 
     thread::spawn(move || -> Result<()> {
             if let Ok(mut message) = msg.channel_id.say("Now updating Arzte's Cute Bot, please wait....") {
 
-                 message.edit(|m| m.content("Pulling in the latest changes from github...."))?;
+                 debug!("Pulling in the latest changes from github....");
 
-                let output = Command::new("git")
-                    .args(&["pull", "-ff"])
-                    .output()?;
+                if !debug {
+                    let output = Command::new("git")
+                        .args(&["pull", "--rebase"])
+                        .output()?;
 
-                if output.status.success() {
-                    message.edit(|m| m.content("Finished pulling updates from Github."))?;
-                } else {
-                    message.edit(|m| m.content("Failed to pull updates from Github."))?;
-                    msg.channel_id.say(format!("```\n{}\n```", String::from_utf8_lossy(&output.stderr)))?;
-                    msg.channel_id.say("Update failed! :(")?;
-                    return Ok(())
+                    if output.status.success() {
+                        debug!("Finished pulling updates from Github.");
+                    } else {
+                        error!("Failed to pull updates from Github:\n {}", String::from_utf8_lossy(&output.stderr));
+                    }
                 }
 
-                message.edit(|m| m.content("Now compiling changes.... (This takes a long time)"))?;
-                msg.channel_id.broadcast_typing()?;
-                let output2 = Command::new("/home/faey/.cargo/bin/cargo")
-                    .args(&["+stable", "build", "--release"])
-                    .current_dir("/home/faey/bot")
-                    .output()?;
+                debug!("Downloading the latest release from github...");
+                dn_file(&github_release_download, "arzte.tar.gz")?;
+                debug!("Done downloading.");
 
-                if output2.status.success() {
-                    message.edit(|m| m.content("Finished compiling new changes."))?;
-                } else {
-                    message.edit(|m| m.content("Failure while compiling new changes."))?;
-                    msg.channel_id.say(format!("```\n{}\n```", String::from_utf8_lossy(&output2.stderr)))?;
-                    msg.channel_id.say("Update failed! :(")?;
-                    return Ok(())
+                debug!("Opening file on filesystem.");
+                let tar_gz = std::fs::File::open("arzte.tar.gz")?;
+                debug!("Decompressing/Decoding arzte.tar.gz");
+                let tar = flate2::read::GzDecoder::new(tar_gz);
+                debug!("Telling tar the archive.");
+                let mut ar = tar::Archive::new(tar);
+                debug!("Unpacking tar archive");
+                ar.unpack(".")?;
+
+                debug!("Deleting leftover archive");
+                std::fs::remove_file("arzte.tar.gz")?;
+
+                debug!("Telling raven to finish setting what it is doing");
+                if let Some(client) = Hub::current().client() {
+                    client.close(Some(Duration::from_secs(2)));
                 }
 
-                message.edit(|m| m.content("Getting shard manager, then telling the bot to shutdown..."))?;
+                message.edit(|m| m.content("Updated! Restarting now!"))?;
+
+                debug!("Getting serenity's data lock...");
                 let data = ctx.data.lock();
 
                 let shard_manager = match data.get::<ShardManagerContainer>() {
                     Some(v) => v,
                     None => {
-                        let _ = message.edit(|m| m.content("There was a problem getting the shard manager"));
-
-                        return Ok(())
+                        warn!("Couldn't get the shard manager for a graceful shutdown, killing the bot....");
+                        std::process::exit(0)
                     },
                 };
 
+                debug!("Attempting to get lock on shard_manager");
                 let mut manager = shard_manager.lock();
 
-                message.edit(|m| m.content("Updated! Restarting now!"))?;
-
-                if let Some(client) = Hub::current().client() {
-                    client.close(Some(Duration::from_secs(2)));
-                }
-
+                debug!("Telling serenity to close all shards, then shutdown");
                 manager.shutdown_all();
             }
             Ok(())

@@ -4,7 +4,7 @@ Personal/Public bot, currently in early development, with a focus on being a per
 
 ## Running arzte
 
-Download the latest release of arzte, then extract the bin file. Copy settings.toml.example to settings.toml, and set your Discord token with your own bot token.
+Download the latest release of arzte, then extract the bin file. Copy settings.example.toml to settings.toml, and set your Discord token with your own bot token.
 
 ```token = "MTc1MDQ4MTc0MzMzOTg0NzY4.DxQwWQ.7TYu1RMBpUkTFlkxhYHsqR_89Nw"``` (not a real token don't worry)
 

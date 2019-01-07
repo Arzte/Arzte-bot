@@ -1,10 +1,11 @@
 dist: trusty
 language: rust
 sudo: required
+rust:
+  - nightly
+  - stable
 
 matrx:
-  include:
-    - rust: nightly
   allowed_failures:
     - rust: stable
   fast_finish: true

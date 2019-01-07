@@ -26,7 +26,7 @@ dependencies = [
 
 [[package]]
 name = "arzte"
-version = "0.0.2-alpha"
+version = "0.0.3-alpha"
 dependencies = [
  "asciimath 0.8.4-alpha.0 (git+https://github.com/Arzte/asciimath-rs.git?branch=patch-1)",
  "built 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",

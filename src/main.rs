@@ -58,6 +58,8 @@ fn main() {
 
     let token = {
         let mut settings = config.lock();
+        settings.set_default("debug", "false")
+            .map_err(|err| warn!("Error setting default debug value: {}", err)).expect("error mapping error, lmao.");
         settings
             .merge(config::File::with_name("settings"))
             .expect("No file called Settings.toml in same folder as bot");

@@ -12,7 +12,6 @@ matrx:
 # Cache cargo symbols for faster build
 cache: 
   - cargo
-  - npm
 
 before_cache:
   # Travis can't cache files that are not readable by "others"

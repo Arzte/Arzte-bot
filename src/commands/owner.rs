@@ -65,7 +65,7 @@ command!(update(ctx, msg, _args) {
 
     debug!("checking debug mode");
     if let (false, Some(local_git)) = (debug, built_info::GIT_VERSION) {
-        if local_git == github_short || local_git == github_release_tag {
+        if local_git == github_short || local_git > github_release_tag || local_git == github_release_tag { 
             if let Ok(mut msg_latest) = msg.reply("Already at latest version!") {
                 std::thread::sleep(std::time::Duration::from_secs(3));
                 let _latest_delete_msg = msg_latest.delete();

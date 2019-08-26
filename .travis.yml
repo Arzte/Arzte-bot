@@ -5,6 +5,7 @@ rust:
   - stable
 
 matrx:
+  # Nightly isn't always working, so best to ignore it if it fails (quicker CI builds as well)
   allowed_failures:
     - rust: nightly
   fast_finish: true
@@ -20,7 +21,7 @@ before_cache:
 before_script:
   - export PATH=$HOME/.cargo/bin:$PATH
 # Disabling these for now as I'm not installing anything else, so this is pointless wasted CI time building this.
-# (diseal might be a reason that I'd want this later one)
+# (diesel might be a reason that I'd want this later one)
 #  - cargo install cargo-update || echo "cargo-update already installed"
 #  - cargo install-update -a # update outdated cached binaries
 
@@ -36,18 +37,10 @@ before_deploy:
   - sh ci/before_deploy.sh
 
 deploy:
-  # TODO update `api_key.secure`
-  # - Create a `public_repo` GitHub token. Go to: https://github.com/settings/tokens/new
-  # - Encrypt it: `travis encrypt 0123456789012345678901234567890123456789
-  # - Paste the output down here
   api_key: $GITHUB_TOKEN
   file_glob: true
   file: arzte-$TRAVIS_TAG.*
   on:
-    # TODO Here you can pick which targets will generate binary releases
-    # In this example, there are some targets that are tested using the stable
-    # and nightly channels. This condition makes sure there is only one release
-    # for such targets and that's generated using the stable channel
     condition: $TRAVIS_RUST_VERSION = stable
     tags: true
   provider: releases

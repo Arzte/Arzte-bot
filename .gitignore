@@ -3,6 +3,6 @@
 
 \.vscode/
 
-settings\.toml
+*.env
 
 arzte

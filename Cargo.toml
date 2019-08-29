@@ -1,7 +1,7 @@
 [package]
 name = "arzte"
 version = "0.1.0"
-authors = ["Faey Hoffmeyer <hoffmeyer25@gmail.com>"]
+authors = ["Iris Hoffmeyer <hoffmeyer25@gmail.com>"]
 publish = false
 build = "build.rs"
 edition = "2018"
@@ -12,7 +12,7 @@ kankyo = "0.3.0"
 log = "0.4"
 
 [dependencies.serenity]
-version = "0.6"
+version = "0.7"
 features = ["cache", "voice", "http", "framework", "standard_framework", "rustls_backend"]
 
 [build-dependencies]

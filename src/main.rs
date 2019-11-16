@@ -1,24 +1,15 @@
-use std::{
-    collections::HashSet,
-    env,
-    sync::Arc,
-};
+mod commands;
+
+use log::{error, info};
 use serenity::{
     client::bridge::gateway::ShardManager,
-    framework::{
-        StandardFramework,
-        standard::macros::group,
-    },
+    framework::{standard::macros::group, StandardFramework},
     model::{event::ResumedEvent, gateway::Ready},
     prelude::*,
 };
-use log::{error, info};
+use std::{collections::HashSet, env, sync::Arc};
 
-use commands::{
-    math::*,
-    meta::*,
-    owner::*,
-};
+use commands::info::*;
 struct ShardManagerContainer;
 
 impl TypeMapKey for ShardManagerContainer {
@@ -40,13 +31,13 @@ impl EventHandler for Handler {
 group!({
     name: "general",
     options: {},
-    commands: [multiply, ping, quit]
+    commands: [about]
 });
 
 fn main() {
     // This will load the environment variables located at `./.env`, relative to
     // the CWD. See `./.env.example` for an example on how to structure this.
-    kankyo::load().expect("Failed to load .env file");
+    kankyo::load(false).expect("Failed to load .env file");
 
     // Initialize the logger to use environment variables.
     //
@@ -54,8 +45,7 @@ fn main() {
     // `RUST_LOG` to debug`.
     env_logger::init();
 
-    let token = env::var("DISCORD_TOKEN")
-        .expect("Expected a token in the environment");
+    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     let mut client = Client::new(&token, Handler).expect("Err creating client");
 
@@ -70,15 +60,15 @@ fn main() {
             set.insert(info.owner.id);
 
             set
-        },
+        }
         Err(why) => panic!("Couldn't get application info: {:?}", why),
     };
 
-    client.with_framework(StandardFramework::new()
-        .configure(|c| c
-            .owners(owners)
-            .prefix("~"))
-        .group(&GENERAL_GROUP));
+    client.with_framework(
+        StandardFramework::new()
+            .configure(|c| c.owners(owners).prefix("~"))
+            .group(&GENERAL_GROUP),
+    );
 
     if let Err(why) = client.start() {
         error!("Client error: {:?}", why);

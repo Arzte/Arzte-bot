@@ -7,13 +7,30 @@ build = "build.rs"
 edition = "2018"
 
 [dependencies]
-env_logger = "0.6"
+env_logger = "0.7.1"
 kankyo = "0.3.0"
 log = "0.4"
+asciimath = "0.8.8"
+config = "0.9.3"
+rand = "0.7.2"
+chrono = "0.4.9"
+typemap = "0.3.3"
+sys-info = "0.5.8"
+built = "0.3.2"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+reqwest = "0.9.22"
+meval = "0.2.0"
+sentry = "0.17.0"
+tempdir = "0.3.7"
+tar = "0.4.26"
+flate2 = "1.0"
+failure = "0.1.6"
 
 [dependencies.serenity]
 version = "0.7"
-features = ["cache", "voice", "http", "framework", "standard_framework", "rustls_backend"]
+features = ["cache", "http", "framework", "standard_framework", "rustls_backend"]
 
 [build-dependencies]
 built = "0.3.1"

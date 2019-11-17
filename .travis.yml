@@ -1,18 +1,16 @@
 dist: trusty
+os: linux
 language: rust
-sudo: required
-rust:
-  - stable
+rust: stable
 
-matrx:
+jobs:
   # Nightly isn't always working, so best to ignore it if it fails (quicker CI builds as well)
-  allowed_failures:
+  allow_failures:
     - rust: nightly
   fast_finish: true
 
 # Cache cargo symbols for faster build
-cache: 
-  - cargo
+cache: cargo
 
 before_cache:
   # Travis can't cache files that are not readable by "others"
@@ -37,14 +35,13 @@ before_deploy:
   - sh ci/before_deploy.sh
 
 deploy:
-  api_key: $GITHUB_TOKEN
+  token: $GITHUB_TOKEN
   file_glob: true
   file: arzte-$TRAVIS_TAG.*
   on:
     condition: $TRAVIS_RUST_VERSION = stable
     tags: true
   provider: releases
-  skip_cleanup: true
 
 after_deploy:
   - ./node_modules/.bin/sentry-cli releases finalize "$VERSION"

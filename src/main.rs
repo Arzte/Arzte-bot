@@ -1,4 +1,8 @@
+#![recursion_limit = "128"]
+#![allow(proc_macro_derive_resolution_fallback)]
+
 mod commands;
+mod core;
 
 use log::{error, info};
 use serenity::{

@@ -4,16 +4,36 @@
 mod commands;
 mod core;
 
-use log::{error, info};
+use log::{
+    error,
+    info,
+};
 use serenity::{
     client::bridge::gateway::ShardManager,
-    framework::{standard::macros::group, StandardFramework},
-    model::{event::ResumedEvent, gateway::Ready},
-    prelude::*,
+    framework::{
+        standard::macros::group,
+        StandardFramework,
+    },
+    model::{
+        event::ResumedEvent,
+        gateway::Ready,
+    },
+    prelude::{
+        Client,
+        Context,
+        EventHandler,
+        Mutex,
+        TypeMapKey,
+    },
 };
-use std::{collections::HashSet, env, sync::Arc};
+use std::{
+    collections::HashSet,
+    env,
+    sync::Arc,
+};
 
-use commands::info::*;
+use crate::commands::info::ABOUT_COMMAND;
+
 struct ShardManagerContainer;
 
 impl TypeMapKey for ShardManagerContainer {

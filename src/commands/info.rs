@@ -1,6 +1,12 @@
-use serenity::framework::standard::{macros::command, CommandResult};
-use serenity::model::prelude::*;
-use serenity::prelude::*;
+use crate::core::built_info;
+use serenity::{
+    framework::standard::{
+        macros::command,
+        CommandResult,
+    },
+    model::prelude::Message,
+    prelude::Context,
+};
 
 #[command]
 fn about(ctx: &mut Context, msg: &Message) -> CommandResult {

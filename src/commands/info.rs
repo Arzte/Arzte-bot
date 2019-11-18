@@ -36,6 +36,9 @@ fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     } else {
         args.single::<u64>()?
     };
+    // Why ask the API before the Cache?
+    // The idea is to lazily check if the bot can access the info as well as ensuring there *is* some data in the cache for the guild.
+    // This also ensures the data that'll be displayed is the most accurate, in case any of the info isn't already up to date in the cache
     let g = match GuildId(guild_id).to_partial_guild(&ctx.http) {
         Ok(partial_guild) => partial_guild,
         Err(_arg_error) => {

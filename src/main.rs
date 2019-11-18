@@ -44,7 +44,10 @@ use std::{
     sync::Arc,
 };
 
-use crate::commands::info::ABOUT_COMMAND;
+use crate::commands::info::{
+    ABOUT_COMMAND,
+    GUILD_COMMAND,
+};
 
 struct ShardManagerContainer;
 
@@ -67,7 +70,7 @@ impl EventHandler for Handler {
 group!({
     name: "general",
     options: {},
-    commands: [about]
+    commands: [about, guild]
 });
 
 fn main() {

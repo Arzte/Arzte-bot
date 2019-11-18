@@ -14,7 +14,7 @@
 // extern crate failure;
 
 mod commands;
-mod core;
+pub mod core;
 
 use log::{
     error,

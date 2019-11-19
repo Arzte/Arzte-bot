@@ -44,10 +44,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::commands::info::{
-    ABOUT_COMMAND,
-    GUILD_COMMAND,
-};
+use crate::commands::info::*;
 
 struct ShardManagerContainer;
 

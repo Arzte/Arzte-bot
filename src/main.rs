@@ -45,6 +45,7 @@ use std::{
 };
 
 use crate::commands::info::*;
+use crate::commands::owner::*;
 
 struct ShardManagerContainer;
 
@@ -64,10 +65,11 @@ impl EventHandler for Handler {
     }
 }
 
+// TODO: Move owner commands to quit so not anyone can run them
 group!({
     name: "general",
     options: {},
-    commands: [about, guild, ping]
+    commands: [about, guild, ping, quit]
 });
 
 fn main() {

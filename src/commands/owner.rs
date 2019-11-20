@@ -11,6 +11,7 @@ use serenity::{
 };
 
 #[command]
+#[owners_only]
 fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
     let data = ctx.data.write();
 
@@ -52,6 +53,7 @@ use std::{
 
 // TODO refactor to simplify
 #[command]
+#[owners_only]
 fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     let github_commit_json: GithubCommit =
         reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;

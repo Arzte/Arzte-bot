@@ -9,7 +9,6 @@ use log::{
     info,
 };
 use serenity::{
-    client::bridge::gateway::ShardManager,
     framework::{
         standard::macros::group,
         StandardFramework,
@@ -22,8 +21,6 @@ use serenity::{
         Client,
         Context,
         EventHandler,
-        Mutex,
-        TypeMapKey,
     },
 };
 use std::{
@@ -34,12 +31,10 @@ use std::{
 
 use crate::commands::info::*;
 use crate::commands::owner::*;
-
-struct ShardManagerContainer;
-
-impl TypeMapKey for ShardManagerContainer {
-    type Value = Arc<Mutex<ShardManager>>;
-}
+use crate::core::structs::{
+    SettingsContainer,
+    ShardManagerContainer,
+};
 
 struct Handler;
 

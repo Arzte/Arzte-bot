@@ -1,9 +1,9 @@
+use serenity::framework::standard::CommandResult;
 use std::fs::File;
 use std::io::copy;
 use tempdir::TempDir;
-use crate::core::error::Result;
 
-pub fn dn_file(url: &str, file: &str) -> Result<()> {
+pub fn dn_file(url: &str, file: &str) -> CommandResult {
     let tmp_dir = TempDir::new("arzte.download")?;
     let mut response = reqwest::get(url)?;
 

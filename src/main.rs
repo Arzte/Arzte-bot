@@ -91,7 +91,7 @@ fn main() {
             .group(&GENERAL_GROUP),
     );
 
-    if let Err(why) = client.start() {
+    if let Err(why) = client.start_autosharded() {
         error!("Client error: {:?}", why);
     }
 }

@@ -1,23 +1,60 @@
-extern crate arzte;
-extern crate serenity;
-#[macro_use]
-extern crate log;
-extern crate env_logger;
-extern crate sentry;
+#![recursion_limit = "128"]
+#![allow(proc_macro_derive_resolution_fallback)]
 
-use serenity::{http, 
-    prelude::*, 
-    model::event::ResumedEvent, 
-    model::gateway::Ready, 
-    model::id::ChannelId, 
-    framework::standard::{
-        help_commands, DispatchError, HelpBehaviour, StandardFramework,
-    }};
-use arzte::{commands::*, core::structs::{ShardManagerContainer, SettingsContainer}};
-use env_logger::{Builder, Target};
-use std::collections::HashSet;
-use std::env;
-use std::sync::Arc;
+mod commands;
+pub mod core;
+
+#[allow(unused_imports)]
+use log::{
+    error,
+    info,
+    warn,
+};
+
+use serenity::{
+    framework::{
+        standard::{
+            help_commands,
+            macros::{
+                group,
+                help,
+            },
+            Args,
+            CommandGroup,
+            CommandResult,
+            DispatchError,
+            HelpOptions,
+        },
+        StandardFramework,
+    },
+    model::{
+        event::ResumedEvent,
+        gateway::Ready,
+        prelude::*,
+    },
+    prelude::{
+        Client,
+        Context,
+        EventHandler,
+    },
+};
+use std::{
+    collections::HashSet,
+    sync::Arc,
+    sync::Mutex,
+};
+
+use crate::{
+    commands::{
+        info::*,
+        math::*,
+        owner::*,
+    },
+    core::structs::{
+        SettingsContainer,
+        ShardManagerContainer,
+    },
+};
 
 struct Handler;
 
@@ -31,35 +68,59 @@ impl EventHandler for Handler {
     }
 }
 
-fn main() {
-    // Sentry error stuffs
-    let _guard = sentry::init(("https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627", sentry::ClientOptions {
-        max_breadcrumbs: 50,
-        debug: true,
-        environment: Some("staging".into()),
-        ..Default::default()
-    }));
-    
-    // env_logger setup stuffs
-    let mut builder = Builder::new();
-    builder.target(Target::Stdout);
-    if env::var("LOG").is_ok() {
-        builder.parse(&env::var("LOG").unwrap());
-    }
+group!({
+    name: "general",
+    options: {},
+    commands: [about, guild, ping, math]
+});
 
+group!({
+    name: "Owners",
+    options: {owners_only: true, help_available: false},
+    commands: [quit, update]
+});
+
+#[help]
+fn my_help(
+    context: &mut Context,
+    msg: &Message,
+    args: Args,
+    help_options: &'static HelpOptions,
+    groups: &[&'static CommandGroup],
+    owners: HashSet<UserId>,
+) -> CommandResult {
+    help_commands::with_embeds(context, msg, args, &help_options, groups, owners)
+}
+
+fn main() {
+    let _guard = sentry::init((
+        "https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627",
+        sentry::ClientOptions {
+            max_breadcrumbs: 50,
+            environment: Some("staging".into()),
+            release: sentry::release_name!(),
+            ..Default::default()
+        },
+    ));
+
+    let mut log_builder = pretty_env_logger::formatted_builder();
+    log_builder.parse_filters("info");
     sentry::configure_scope(|scope| {
         scope.set_level(Some(sentry::Level::Warning));
     });
-    sentry::integrations::env_logger::init(Some(builder.build()), Default::default());
+    sentry::integrations::env_logger::init(Some(log_builder.build()), Default::default());
     sentry::integrations::panic::register_panic_handler();
-
 
     let config = Arc::new(Mutex::new(config::Config::default()));
 
     let token = {
-        let mut settings = config.lock();
-        settings.set_default("debug", "false")
-            .map_err(|err| warn!("Error setting default debug value: {}", err)).expect("error mapping error, lmao.");
+        let mut settings = config.lock().unwrap_or_else(|err| {
+            error!("Unable to get config lock, bailing...");
+            panic!("{}", err);
+        });
+        settings
+            .set_default("debug", "false")
+            .expect("Unable to set a default value for debug");
         settings
             .merge(config::File::with_name("settings"))
             .expect("No file called Settings.toml in same folder as bot");
@@ -71,12 +132,12 @@ fn main() {
     let mut client = Client::new(&token, Handler).expect("Err creating client");
 
     {
-        let mut data = client.data.lock();
+        let mut data = client.data.write();
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
         data.insert::<SettingsContainer>(Arc::clone(&config));
     }
 
-    let owners = match http::get_current_application_info() {
+    let owners = match client.cache_and_http.http.get_current_application_info() {
         Ok(info) => {
             let mut set = HashSet::new();
             set.insert(info.owner.id);
@@ -90,47 +151,28 @@ fn main() {
         StandardFramework::new()
             .configure(|c| {
                 c.owners(owners)
-                    .allow_whitespace(true)
-                    .on_mention(true)
-                    .prefix(".d")
-                    .no_dm_prefix(true)
+                    .prefix("~")
+                    .ignore_webhooks(false)
                     .case_insensitivity(true)
-                    .prefix_only_cmd(info::about)
-            }).after(|_ctx, msg, cmd_name, error| {
+            })
+            .on_dispatch_error(|ctx, msg, error| {
+                if let DispatchError::Ratelimited(seconds) = error {
+                    let _ = msg.channel_id.say(
+                        &ctx.http,
+                        &format!("Try this again in {} seconds.", seconds),
+                    );
+                }
+            })
+            .after(|ctx, msg, cmd_name, error| {
                 //  Print out an error if it happened
                 if let Err(why) = error {
-                    if let Err(msg_why) = msg.channel_id.say("An unexpected error occured when running this command, please try again later.") {
-                        error!("Error sending message: {:#?}", msg_why);
-                    };
-                    if let Err(msg_why) = ChannelId(521_537_902_291_976_196).send_message(|m| m.content(format!("An unaccounted for error occured in ``{}``, details on Sentry.", cmd_name))) {
-                        error!("Error sending error message: {:#?}", msg_why);
-                    };
+                    let _ = msg.channel_id.say(&ctx.http, "An unexpected error occured when running this command, please try again later.");
                     error!("{} has encountered an error:: {:?}", cmd_name, why);
                 }
             })
-            .on_dispatch_error(|_ctx, msg, error| {
-                // if there was an error related to ratelimiting, send a message about it.
-                if let DispatchError::RateLimited(seconds) = error {
-                    let _ = msg
-                        .channel_id
-                        .say(&format!("Try this again in {} seconds.", seconds));
-                }
-            }).customised_help(help_commands::with_embeds, |c| {
-                c.individual_command_tip("If you want more information about a specific command, just pass the command as argument.")
-                .command_not_found_text("Could not find: `{}`.")
-                .max_levenshtein_distance(3)
-                .lacking_permissions(HelpBehaviour::Hide)
-                .lacking_role(HelpBehaviour::Nothing)
-                .wrong_channel(HelpBehaviour::Strike)
-            }).command("about", |c| c.cmd(info::about))
-            .group("Ultility", |g| g
-                .command("ping", |c| c.cmd(meta::ping))
-                .command("guild", |c| c.cmd(info::guild))
-                .command("math", |c| c.cmd(math::math)))
-            .group("Bot Owner Only", |g| g
-                .owners_only(true)
-                .command("update", |c| c.cmd(owner::update).known_as("u"))
-                .command("quit", |c| c.cmd(owner::quit))),
+            .help(&MY_HELP)
+            .group(&GENERAL_GROUP)
+            .group(&OWNERS_GROUP),
     );
 
     if let Err(why) = client.start_autosharded() {

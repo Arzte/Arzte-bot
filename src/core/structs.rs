@@ -1,3 +1,8 @@
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 // Structs for the latest github release API response
 // https://api.github.com/repos/:owner/:repo/releases/latest
 #[derive(Serialize, Deserialize)]
@@ -36,7 +41,7 @@ pub struct Asset {
     download_count: i64,
     created_at: String,
     updated_at: String,
-    pub(crate)browser_download_url: String,
+    pub(crate) browser_download_url: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -61,7 +66,6 @@ struct Author {
     author_type: String,
     site_admin: bool,
 }
-
 
 // These are all structs for the github response to
 // https://api.github.com/repos/:owner/:repo/commits/:commit
@@ -167,14 +171,17 @@ struct Stats {
 // which allows for non serenity items to access the shardmanger,
 
 use serenity::client::bridge::gateway::ShardManager;
-use serenity::prelude::Mutex;
-use std::sync::Arc;
+use serenity::prelude::Mutex as SernMutex;
+use std::sync::{
+    Arc,
+    Mutex,
+};
 use typemap::Key;
 
 pub struct ShardManagerContainer;
 
 impl Key for ShardManagerContainer {
-    type Value = Arc<Mutex<ShardManager>>;
+    type Value = Arc<SernMutex<ShardManager>>;
 }
 
 pub struct SettingsContainer;

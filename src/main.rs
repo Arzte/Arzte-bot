@@ -12,14 +12,23 @@ use log::{
 use serenity::{
     framework::{
         standard::{
-            macros::group,
+            help_commands,
+            macros::{
+                group,
+                help,
+            },
+            Args,
+            CommandGroup,
+            CommandResult,
             DispatchError,
+            HelpOptions,
         },
         StandardFramework,
     },
     model::{
         event::ResumedEvent,
         gateway::Ready,
+        prelude::*,
     },
     prelude::{
         Client,
@@ -68,6 +77,18 @@ group!({
     options: {owners_only: true, help_available: false},
     commands: [quit, update]
 });
+
+#[help]
+fn my_help(
+    context: &mut Context,
+    msg: &Message,
+    args: Args,
+    help_options: &'static HelpOptions,
+    groups: &[&'static CommandGroup],
+    owners: HashSet<UserId>,
+) -> CommandResult {
+    help_commands::with_embeds(context, msg, args, &help_options, groups, owners)
+}
 
 fn main() {
     let _guard = sentry::init((

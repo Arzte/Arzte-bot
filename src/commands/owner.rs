@@ -1,5 +1,5 @@
 use crate::ShardManagerContainer;
-// TODO reenable sentry
+// TODO: reenable sentry
 // use sentry::Hub;
 use serenity::{
     framework::standard::{
@@ -28,7 +28,7 @@ fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     msg.reply(&ctx, "Shutting down!")?;
 
-    // TODO reenable sentry
+    // TODO: reenable sentry
     // if let Some(client) = Hub::current().client() {
     //     client.close(Some(Duration::from_secs(2)));
     // }
@@ -51,7 +51,7 @@ use std::{
     thread,
 };
 
-// TODO refactor to simplify
+// TODO: refactor to simplify
 #[command]
 #[owners_only]
 fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
@@ -154,7 +154,7 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
             // debug!("Deleting leftover archive");
             std::fs::remove_file("arzte.tar.gz")?;
 
-            // TODO renable Sentry/Hub
+            // TODO: renable Sentry/Hub
             // debug!("Telling raven to finish setting what it is doing");
             // if let Some(client) = Hub::current().client() {
             //     client.close(Some(Duration::from_secs(2)));

@@ -6,6 +6,9 @@ publish = false
 build = "build.rs"
 edition = "2018"
 
+[profile.release]
+lto = true
+
 [dependencies]
 serenity = "0.6.2"
 config = "0.9.3"

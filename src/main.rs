@@ -8,9 +8,13 @@ use log::{
     error,
     info,
 };
+
 use serenity::{
     framework::{
-        standard::macros::group,
+        standard::{
+            macros::group,
+            DispatchError,
+        },
         StandardFramework,
     },
     model::{
@@ -29,12 +33,16 @@ use std::{
     sync::Arc,
 };
 
-use crate::commands::info::*;
-use crate::commands::math::*;
-use crate::commands::owner::*;
-use crate::core::structs::{
-    SettingsContainer,
-    ShardManagerContainer,
+use crate::{
+    commands::{
+        info::*,
+        math::*,
+        owner::*,
+    },
+    core::structs::{
+        SettingsContainer,
+        ShardManagerContainer,
+    },
 };
 
 struct Handler;
@@ -49,11 +57,16 @@ impl EventHandler for Handler {
     }
 }
 
-// TODO: Move owner commands to quit so not anyone can run them
 group!({
     name: "general",
     options: {},
-    commands: [about, guild, ping, quit, math]
+    commands: [about, guild, ping, math]
+});
+
+group!({
+    name: "Owners",
+    options: {owners_only: true, help_available: false},
+    commands: [quit, update]
 });
 
 fn main() {
@@ -100,8 +113,27 @@ fn main() {
 
     client.with_framework(
         StandardFramework::new()
-            .configure(|c| c.owners(owners).prefix("~"))
-            .group(&GENERAL_GROUP),
+            .configure(|c| {
+                c.owners(owners)
+                    .prefix("~")
+                    .ignore_webhooks(false)
+                    .case_insensitivity(true)
+            })
+            .on_dispatch_error(|ctx, msg, error| {
+                if let DispatchError::Ratelimited(seconds) = error {
+                    let _ = msg.channel_id.say(
+                        &ctx.http,
+                        &format!("Try this again in {} seconds.", seconds),
+                    );
+                }
+            })
+            .after(|_ctx, _msg, cmd_name, error| {
+                if let Err(why) = error {
+                    println!("Error in {}: {:?}", cmd_name, why);
+                }
+            })
+            .group(&GENERAL_GROUP)
+            .group(&OWNERS_GROUP),
     );
 
     if let Err(why) = client.start_autosharded() {

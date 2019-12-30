@@ -4,9 +4,11 @@
 mod commands;
 pub mod core;
 
+#[allow(unused_imports)]
 use log::{
     error,
     info,
+    warn,
 };
 
 use serenity::{
@@ -38,8 +40,8 @@ use serenity::{
 };
 use std::{
     collections::HashSet,
-    env,
     sync::Arc,
+    sync::Mutex,
 };
 
 use crate::{
@@ -109,17 +111,30 @@ fn main() {
     sentry::integrations::env_logger::init(Some(log_builder.build()), Default::default());
     sentry::integrations::panic::register_panic_handler();
 
-    // This will load the environment variables located at `./.env`, relative to
-    // the CWD. See `./.env.example` for an example on how to structure this.
-    kankyo::load(false).expect("Failed to load .env file");
+    let config = Arc::new(Mutex::new(config::Config::default()));
 
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token = {
+        let mut settings = config.lock().unwrap_or_else(|err| {
+            error!("Unable to get config lock, bailing...");
+            panic!("{}", err);
+        });
+        settings
+            .set_default("debug", "false")
+            .expect("Unable to set a default value for debug");
+        settings
+            .merge(config::File::with_name("settings"))
+            .expect("No file called Settings.toml in same folder as bot");
+        settings
+            .get_str("token")
+            .expect("No token/token value set in Settings file")
+    };
 
     let mut client = Client::new(&token, Handler).expect("Err creating client");
 
     {
         let mut data = client.data.write();
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
+        data.insert::<SettingsContainer>(Arc::clone(&config));
     }
 
     let owners = match client.cache_and_http.http.get_current_application_info() {

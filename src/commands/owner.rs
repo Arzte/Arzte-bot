@@ -87,7 +87,7 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         };
 
         debug!("Getting lock for settings manager");
-        let settings = settings_manager.lock();
+        let settings = settings_manager.lock()?;
         settings.get_bool("debug")?
     };
 

@@ -171,14 +171,17 @@ struct Stats {
 // which allows for non serenity items to access the shardmanger,
 
 use serenity::client::bridge::gateway::ShardManager;
-use serenity::prelude::Mutex;
-use std::sync::Arc;
+use serenity::prelude::Mutex as SernMutex;
+use std::sync::{
+    Arc,
+    Mutex,
+};
 use typemap::Key;
 
 pub struct ShardManagerContainer;
 
 impl Key for ShardManagerContainer {
-    type Value = Arc<Mutex<ShardManager>>;
+    type Value = Arc<SernMutex<ShardManager>>;
 }
 
 pub struct SettingsContainer;

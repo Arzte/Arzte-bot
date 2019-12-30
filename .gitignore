@@ -1,10 +1,9 @@
 /target
-/temp/target
-/temp/Cargo.lock
 **/*.rs.bk
 
 \.vscode/
 
 *.env
+settings.toml
 
 arzte

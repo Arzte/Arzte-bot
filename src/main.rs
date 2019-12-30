@@ -148,11 +148,15 @@ fn main() {
                     );
                 }
             })
-            .after(|_ctx, _msg, cmd_name, error| {
+            .after(|ctx, msg, cmd_name, error| {
+                //  Print out an error if it happened
                 if let Err(why) = error {
-                    println!("Error in {}: {:?}", cmd_name, why);
+                    let _ = msg.channel_id.say(&ctx.http, "An unexpected error occured when running this command, please try again later.");
+                    let _ = ChannelId(521_537_902_291_976_196).send_message(&ctx.http, |m| m.content(format!("An unaccounted for error occured in ``{}``, details on Sentry.", cmd_name)));
+                    error!("{} has encountered an error:: {:?}", cmd_name, why);
                 }
             })
+            .help(&MY_HELP)
             .group(&GENERAL_GROUP)
             .group(&OWNERS_GROUP),
     );

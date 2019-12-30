@@ -1,6 +1,12 @@
 use crate::ShardManagerContainer;
-// TODO: reenable sentry
-// use sentry::Hub;
+use chrono::Duration;
+use log::{
+    debug,
+    error,
+    info,
+    warn,
+};
+use sentry::Hub;
 use serenity::{
     framework::standard::{
         macros::command,
@@ -28,11 +34,11 @@ fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     msg.reply(&ctx, "Shutting down!")?;
 
-    // TODO: reenable sentry
-    // if let Some(client) = Hub::current().client() {
-    //     client.close(Some(Duration::from_secs(2)));
-    // }
+    if let Some(client) = Hub::current().client() {
+        client.close(Some(Duration::seconds(2).to_std()?));
+    }
 
+    info!("Telling serenity to close all shards, then shutdown");
     manager.shutdown_all();
     Ok(())
 }
@@ -63,29 +69,29 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     let github_release_tag = github_release_json.tag_name.as_str();
     let github_short = &github_commit_sha[0..7];
 
-    // debug!("Getting debug state...");
+    debug!("Getting debug state...");
     let debug = {
-        // debug!("Getting serenity's data container lock...");
+        debug!("Getting serenity's data container lock...");
         let data = ctx.data.write();
 
-        // debug!("Getting settings mutex from data...");
+        debug!("Getting settings mutex from data...");
         let settings_manager = {
             match data.get::<SettingsContainer>() {
                 Some(v) => v,
                 None => {
-                    // error!("Error getting settings container.");
+                    error!("Error getting settings container.");
 
                     return Ok(());
                 }
             }
         };
 
-        // debug!("Getting lock for settings manager");
+        debug!("Getting lock for settings manager");
         let settings = settings_manager.lock();
         settings.get_bool("debug")?
     };
 
-    // debug!("checking debug mode");
+    debug!("checking debug mode");
     if let (false, Some(local_git)) = (debug, built_info::GIT_VERSION) {
         let num_local: i32 = local_git
             .replace(".", "")
@@ -122,62 +128,59 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
             .channel_id
             .say(&ctx.http, "Now updating Arzte's Cute Bot, please wait....")
         {
-            // debug!("Pulling in the latest changes from github....");
+            debug!("Pulling in the latest changes from github....");
 
             if !debug {
                 let output = Command::new("git").args(&["pull", "--rebase"]).output()?;
 
                 if output.status.success() {
-                    // debug!("Finished pulling updates from Github.");
+                    debug!("Finished pulling updates from Github.");
                 } else {
-                    // error!(
-                    println!(
+                    error!(
                         "Failed to pull updates from Github:\n {}",
                         String::from_utf8_lossy(&output.stderr)
                     );
                 }
             }
 
-            // debug!("Downloading the latest release from github...");
+            debug!("Downloading the latest release from github...");
             dn_file(&github_release_download, "arzte.tar.gz")?;
-            // debug!("Done downloading.");
+            debug!("Done downloading.");
 
-            // debug!("Opening file on filesystem.");
+            debug!("Opening the file.");
             let tar_gz = std::fs::File::open("arzte.tar.gz")?;
-            // debug!("Decompressing/Decoding arzte.tar.gz");
+            debug!("Decompressing/Decoding arzte.tar.gz");
             let tar = flate2::read::GzDecoder::new(tar_gz);
-            // debug!("Telling tar the archive.");
+            debug!("Telling tar the archive.");
             let mut ar = tar::Archive::new(tar);
-            // debug!("Unpacking tar archive");
+            debug!("Unpacking tar archive");
             ar.unpack(".")?;
 
-            // debug!("Deleting leftover archive");
+            debug!("Deleting leftover archive");
             std::fs::remove_file("arzte.tar.gz")?;
 
-            // TODO: renable Sentry/Hub
-            // debug!("Telling raven to finish setting what it is doing");
-            // if let Some(client) = Hub::current().client() {
-            //     client.close(Some(Duration::from_secs(2)));
-            // }
+            debug!("Telling raven to finish what it is doing");
+            if let Some(client) = Hub::current().client() {
+                client.close(Some(Duration::seconds(2).to_std()?));
+            }
 
             message.edit(&ctx, |m| m.content("Updated! Restarting now!"))?;
 
-            // debug!("Getting serenity's data lock...");
+            debug!("Getting serenity's data lock...");
             let data = ctx.data.write();
 
             let shard_manager = match data.get::<ShardManagerContainer>() {
                 Some(v) => v,
                 None => {
-                    // warn!("Couldn't get the shard manager for a graceful shutdown, killing the bot....");
-                    println!("Couldn't get the shard manager for a graceful shutdown, killing the bot....");
+                    warn!("Couldn't get the shard manager for a graceful shutdown, killing the bot....");
                     std::process::exit(0)
                 }
             };
 
-            // debug!("Attempting to get lock on shard_manager");
+            debug!("Getting a lock on shard_manager");
             let mut manager = shard_manager.lock();
 
-            // debug!("Telling serenity to close all shards, then shutdown");
+            info!("Telling serenity to close all shards, then shutdown");
             manager.shutdown_all();
         }
         Ok(())

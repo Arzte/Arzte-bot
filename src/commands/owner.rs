@@ -128,21 +128,6 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
             .channel_id
             .say(&ctx.http, "Now updating Arzte's Cute Bot, please wait....")
         {
-            debug!("Pulling in the latest changes from github....");
-
-            if !debug {
-                let output = Command::new("git").args(&["pull", "--rebase"]).output()?;
-
-                if output.status.success() {
-                    debug!("Finished pulling updates from Github.");
-                } else {
-                    error!(
-                        "Failed to pull updates from Github:\n {}",
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
-            }
-
             debug!("Downloading the latest release from github...");
             dn_file(&github_release_download, "arzte.tar.gz")?;
             debug!("Done downloading.");

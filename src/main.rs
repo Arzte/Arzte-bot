@@ -30,6 +30,7 @@ use std::{
 };
 
 use crate::commands::info::*;
+use crate::commands::math::*;
 use crate::commands::owner::*;
 use crate::core::structs::{
     SettingsContainer,
@@ -52,7 +53,7 @@ impl EventHandler for Handler {
 group!({
     name: "general",
     options: {},
-    commands: [about, guild, ping, quit]
+    commands: [about, guild, ping, quit, math]
 });
 
 fn main() {

@@ -57,15 +57,27 @@ group!({
 });
 
 fn main() {
+    let _guard = sentry::init((
+        "https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627",
+        sentry::ClientOptions {
+            max_breadcrumbs: 50,
+            environment: Some("staging".into()),
+            release: sentry::release_name!(),
+            ..Default::default()
+        },
+    ));
+
+    let mut log_builder = pretty_env_logger::formatted_builder();
+    log_builder.parse_filters("info");
+    sentry::configure_scope(|scope| {
+        scope.set_level(Some(sentry::Level::Warning));
+    });
+    sentry::integrations::env_logger::init(Some(log_builder.build()), Default::default());
+    sentry::integrations::panic::register_panic_handler();
+
     // This will load the environment variables located at `./.env`, relative to
     // the CWD. See `./.env.example` for an example on how to structure this.
     kankyo::load(false).expect("Failed to load .env file");
-
-    // Initialize the logger to use environment variables.
-    //
-    // In this case, a good default is setting the environment variable
-    // `RUST_LOG` to debug`.
-    env_logger::init();
 
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 

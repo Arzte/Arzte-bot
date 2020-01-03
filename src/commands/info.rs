@@ -6,6 +6,7 @@ use serenity::{
     framework::standard::{
         macros::command,
         Args,
+        CommandError,
         CommandResult,
     },
     model::{
@@ -25,6 +26,51 @@ fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
+#[description = "Shows various information about a user"]
+#[only_in("guilds")]
+fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    let guild_id = msg.guild_id.ok_or("Failed to get GuildID from Message.")?;
+    let member = if msg.mentions.is_empty() {
+        if args.is_empty() {
+            msg.member(&ctx).ok_or("Could not find member.")?
+        } else {
+            (*(guild_id
+                .to_guild_cached(&ctx)
+                .ok_or("Failed to get Guild from GuildId")?
+                .read()
+                .members_starting_with(args.rest(), false, true)
+                .first()
+                .ok_or("Could not find member")?))
+            .clone()
+        }
+    } else {
+        guild_id.member(
+            &ctx,
+            msg.mentions
+                .first()
+                .ok_or("Failed to get user mentioned.")?,
+        )?
+    };
+
+    let user = member.user.read();
+    let nickname = member.nick.map_or("None".to_owned(), |nick| nick.clone());
+    let member_joined = member
+        .joined_at
+        .map_or("Unavailable".to_owned(), |d| format!("{}", d));
+
+    msg.channel_id
+        .send_message(&ctx, move |m| {
+            m.embed(move |e| {
+                e.author(|a| a.name(&user.name).icon_url(&user.face()))
+                    .field("Discriminator", format!("#{:04}", user.discriminator), true)
+                    .field("User ID", user.id, true)
+                    .field("Nickname", nickname, true)
+                    .field("User Created", user.created_at(), true)
+                    .field("Joined Server", member_joined, true)
+            })
+        })
+        .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
+}
 fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let guild_id = if args.is_empty() {
         if let Some(gid) = msg.guild_id {

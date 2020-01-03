@@ -151,7 +151,8 @@ fn main() {
         StandardFramework::new()
             .configure(|c| {
                 c.owners(owners)
-                    .prefix("!")
+                // TODO: Make this prefix dynamic and configurable per guild
+                    .prefix("a.")
                     .ignore_webhooks(false)
                     .case_insensitivity(true)
             })

@@ -151,7 +151,7 @@ fn main() {
         StandardFramework::new()
             .configure(|c| {
                 c.owners(owners)
-                    .prefix("~")
+                    .prefix("!")
                     .ignore_webhooks(false)
                     .case_insensitivity(true)
             })

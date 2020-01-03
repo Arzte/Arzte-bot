@@ -155,20 +155,18 @@ fn main() {
                     .ignore_webhooks(false)
                     .case_insensitivity(true)
             })
-            .on_dispatch_error(|ctx, msg, error| {
-                if let DispatchError::Ratelimited(seconds) = error {
-                    let _ = msg.channel_id.say(
-                        &ctx.http,
+            .on_dispatch_error(|context, message, error| match error {
+                DispatchError::Ratelimited(seconds) => {
+                    let _ = message.channel_id.say(
+                        &context.http,
                         &format!("Try this again in {} seconds.", seconds),
                     );
-                }
+                },
+                _ => error!("{} failed: {:?}", message.content, error),
             })
-            .after(|ctx, msg, cmd_name, error| {
-                //  Print out an error if it happened
-                if let Err(why) = error {
-                    let _ = msg.channel_id.say(&ctx.http, "An unexpected error occured when running this command, please try again later.");
+            .after(|context, message, cmd_name, error| if let Err(why) = error {
+                    let _ = message.channel_id.say(&context.http, "An unexpected error occured when running this command, please try again later.");
                     error!("{} has encountered an error:: {:?}", cmd_name, why);
-                }
             })
             .help(&MY_HELP)
             .group(&GENERAL_GROUP)

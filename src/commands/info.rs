@@ -71,66 +71,66 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         })
         .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
 }
-fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
-    let guild_id = if args.is_empty() {
-        if let Some(gid) = msg.guild_id {
-            *gid.as_u64()
-        } else {
-            msg.channel_id.say(
-                &ctx.http,
-                "I was unable to get the current guild id, try again later.",
-            )?;
-            return Ok(());
-        }
-    } else {
-        args.single::<u64>()?
-    };
-    // Why ask the API before the Cache?
-    // The idea is to lazily check if the bot can access the info as well as ensuring there *is* some data in the cache for the guild.
-    // This also ensures the data that'll be displayed is the most accurate, in case any of the info isn't already up to date in the cache
-    let g = match GuildId(guild_id).to_partial_guild(&ctx.http) {
-        Ok(partial_guild) => partial_guild,
-        Err(_arg_error) => {
-            msg.channel_id
-                .say(&ctx.http, ":no_entry_sign: Invalid server/Not Available")?;
-            return Ok(());
-        }
-    };
-    let guild_lock = &ctx.cache.read().guild(&g.id);
-    if let Some(guild_lock) = guild_lock {
-        let guildd = guild_lock.read();
-        msg.channel_id
-            .send_message(&ctx.http, |m| {
-                m.embed(|e| {
-                    let mut e = e
-                        .title(&g.name)
-                        .field("ID", &g.id, false)
-                        .field("Name", &g.name, true)
-                        .field("Owner", format!("<@{}>", &g.owner_id.as_u64()), true)
-                        .field("Region", &g.region, true)
-                        .field("Members", guildd.members.len(), true)
-                        .field(
-                            "Created on",
-                            &g.id
-                                .created_at()
-                                .format("%a, %d %h %Y @ %H:%M:%S")
-                                .to_string(),
-                            true,
-                        )
-                        .field("Roles", &g.roles.len(), true)
-                        .field("Emojis", &g.emojis.len(), true);
-                    if let Some(icon_url) = &g.icon_url() {
-                        e = e
-                            .thumbnail(&icon_url)
-                            .author(|a| a.name(&g.name).icon_url(&icon_url));
-                    }
 
-                    e
+#[command]
+#[description = "Shows various information about a guild."]
+#[only_in("guilds")]
+fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+    let guild_id = if !args.is_empty() {
+        GuildId(args.single::<u64>()?)
+    } else if let Some(gid) = msg.guild_id {
+        gid
+    } else {
+        msg.channel_id.say(
+            &ctx.http,
+            "I was unable to get the current guild id, try again later.",
+        )?;
+        return Ok(());
+    };
+    let guild = guild_id
+        .to_guild_cached(&ctx)
+        .ok_or("Failed to get Guild from GuildID")?
+        .read()
+        .clone();
+
+    msg.channel_id
+        .send_message(&ctx, move |m| {
+            m.embed(move |e| {
+                e.author(|a| {
+                    a.name(&guild.name);
+                    if let Some(guild_icon) = &guild.icon_url() {
+                        a.icon_url(guild_icon);
+                    }
+                    a
+                })
+                .field("Owner", format!("<@{}>", &guild.owner_id.as_u64()), true)
+                .field("Guild ID", format!("{}", guild_id), true)
+                .field("Members", guild.member_count, true)
+                .field("Region", &guild.region, true)
+                .field("Roles", &guild.roles.len(), true)
+                .field("Emojis", &guild.emojis.len(), true)
+                .field("Features", format!("{:?}", guild.features), true)
+                .field(
+                    "Nitro Boost Level",
+                    format!("{:?}", guild.premium_tier),
+                    true,
+                )
+                .field("Nitro Boosts", guild.premium_subscription_count, true);
+                if let Some(splash) = guild.splash_url() {
+                    e.image(splash);
+                }
+                e.footer(|f| {
+                    f.text(format!(
+                        "Guild created on {}",
+                        guild_id
+                            .created_at()
+                            .format("%a, %d %h %Y @ %H:%M:%S")
+                            .to_string()
+                    ))
                 })
             })
-            .unwrap();
-    };
-    Ok(())
+        })
+        .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
 }
 
 #[command]

@@ -52,10 +52,7 @@ use crate::core::{
     },
     utils::dn_file,
 };
-use std::{
-    process::Command,
-    thread,
-};
+use std::thread;
 
 // TODO: refactor to simplify
 #[command]

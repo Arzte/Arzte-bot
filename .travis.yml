@@ -1,12 +1,12 @@
 dist: trusty
 os: linux
 language: rust
-rust: stable
+rust: nightly
 
 jobs:
-  # Nightly isn't always working, so best to ignore it if it fails (quicker CI builds as well)
+  # Not building on stable due to nightly features, however it's a nice to have
   allow_failures:
-    - rust: nightly
+    - rust: stable
   fast_finish: true
 
 # Cache cargo symbols for faster build
@@ -39,7 +39,7 @@ deploy:
   file_glob: true
   file: arzte-$TRAVIS_TAG.*
   on:
-    condition: $TRAVIS_RUST_VERSION = stable
+    condition: $TRAVIS_RUST_VERSION = nightly
     tags: true
   provider: releases
   skip_cleanup: true

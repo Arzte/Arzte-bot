@@ -1,10 +1,9 @@
 use crate::ShardManagerContainer;
 use chrono::Duration;
 use log::{
-    debug,
     error,
     info,
-    warn,
+    trace,
 };
 use sentry::Hub;
 use serenity::{
@@ -52,9 +51,7 @@ use crate::core::{
     },
     utils::dn_file,
 };
-use std::thread;
 
-// TODO: refactor to simplify
 #[command]
 #[owners_only]
 fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
@@ -62,16 +59,13 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
     let github_release_json: GithubRelease =
         reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/releases/latest")?.json()?;
-    let github_commit_sha = github_commit_json.sha;
+    let github_commit_sha = &github_commit_json.sha[0..7];
     let github_release_tag = github_release_json.tag_name.as_str();
-    let github_short = &github_commit_sha[0..7];
 
-    debug!("Getting debug state...");
     let debug = {
-        debug!("Getting serenity's data container lock...");
-        let data = ctx.data.write();
+        let data = ctx.data.read();
 
-        debug!("Getting settings mutex from data...");
+        trace!("Getting settings mutex from data...");
         let settings_manager = {
             match data.get::<SettingsContainer>() {
                 Some(v) => v,
@@ -83,23 +77,19 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
             }
         };
 
-        debug!("Getting lock for settings manager");
+        trace!("Getting lock for settings manager");
         let settings = settings_manager.lock()?;
-        settings.get_bool("debug")?
+        settings.get_bool("debug").unwrap_or_else(|_err| false)
     };
 
-    debug!("checking debug mode");
     if let (false, Some(local_git)) = (debug, built_info::GIT_VERSION) {
-        let num_local: i32 = local_git
-            .replace(".", "")
-            .replace("-alpha", "")
-            .parse::<i32>()?;
-        let num_github: i32 = github_release_tag
-            .replace(".", "")
-            .replace("-alpha", "")
-            .parse::<i32>()?;
+        let num_local: i32 = local_git.replace(".", "").parse::<i32>()?;
+        let num_github: i32 = github_release_tag.replace(".", "").parse::<i32>()?;
 
-        if local_git == github_short || num_local > num_github || local_git == github_release_tag {
+        if local_git == github_commit_sha
+            || num_local > num_github
+            || local_git == github_release_tag
+        {
             if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "Already at latest version!") {
                 std::thread::sleep(std::time::Duration::from_secs(3));
                 let _latest_delete_msg = msg_latest.delete(&ctx);
@@ -109,63 +99,46 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         } else if github_release_json.assets.is_empty() {
             if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "There's a release, however Travis hasn't successfully built the new version yet, perhaps try again in a few minutes?") {
                 std::thread::sleep(std::time::Duration::from_secs(10));
-                let _latest_delete_msg = msg_latest.delete(&ctx);
-                if let Err(_missing_perms) = msg.delete(&ctx) {}
+                let _ = msg_latest.delete(&ctx);
+                let _ = msg.delete(&ctx);
             }
         }
     };
 
     let github_release_download = &github_release_json.assets[0].browser_download_url;
     let github_release_download = github_release_download.clone();
-    let ctx = ctx.clone();
-    let msg = msg.clone();
+    if let Ok(mut message) = msg
+        .channel_id
+        .say(&ctx.http, "Now updating Arzte's Cute Bot, please wait....")
+    {
+        trace!("Downloading the latest release from github...");
+        dn_file(&github_release_download, "arzte.tar.gz", "arzte")?;
 
-    thread::spawn(move || -> CommandResult {
-        if let Ok(mut message) = msg
-            .channel_id
-            .say(&ctx.http, "Now updating Arzte's Cute Bot, please wait....")
-        {
-            debug!("Downloading the latest release from github...");
-            dn_file(&github_release_download, "arzte.tar.gz")?;
-            debug!("Done downloading.");
-
-            debug!("Opening the file.");
-            let tar_gz = std::fs::File::open("arzte.tar.gz")?;
-            debug!("Decompressing/Decoding arzte.tar.gz");
-            let tar = flate2::read::GzDecoder::new(tar_gz);
-            debug!("Telling tar the archive.");
-            let mut ar = tar::Archive::new(tar);
-            debug!("Unpacking tar archive");
-            ar.unpack(".")?;
-
-            debug!("Deleting leftover archive");
-            std::fs::remove_file("arzte.tar.gz")?;
-
-            debug!("Telling raven to finish what it is doing");
-            if let Some(client) = Hub::current().client() {
-                client.close(Some(Duration::seconds(2).to_std()?));
-            }
-
-            message.edit(&ctx, |m| m.content("Updated! Restarting now!"))?;
-
-            debug!("Getting serenity's data lock...");
-            let data = ctx.data.write();
-
-            let shard_manager = match data.get::<ShardManagerContainer>() {
-                Some(v) => v,
-                None => {
-                    warn!("Couldn't get the shard manager for a graceful shutdown, killing the bot....");
-                    std::process::exit(0)
-                }
-            };
-
-            debug!("Getting a lock on shard_manager");
-            let mut manager = shard_manager.lock();
-
-            info!("Telling serenity to close all shards, then shutdown");
-            manager.shutdown_all();
+        info!("Telling raven to finish what it is doing");
+        if let Some(client) = Hub::current().client() {
+            client.close(Some(Duration::seconds(2).to_std()?));
         }
-        Ok(())
-    });
+
+        message.edit(&ctx, |m| m.content("Updated! Restarting now!"))?;
+
+        trace!("Getting serenity's data lock...");
+        let data = ctx.data.write();
+
+        let shard_manager = match data.get::<ShardManagerContainer>() {
+            Some(v) => v,
+            None => {
+                error!(
+                    "Couldn't get the shard manager for a graceful shutdown, killing the bot...."
+                );
+                std::process::exit(0)
+            }
+        };
+
+        trace!("Getting a lock on shard_manager");
+        let mut manager = shard_manager.lock();
+
+        info!("Telling serenity to close all shards, then shutdown");
+        manager.shutdown_all();
+    }
     Ok(())
 }

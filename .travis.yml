@@ -24,7 +24,7 @@ before_script:
 #  - cargo install-update -a # update outdated cached binaries
 
 script:
-  - cargo build
+  - cargo check
 
 before_deploy:
   - npm install @sentry/cli

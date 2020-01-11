@@ -93,11 +93,38 @@ fn my_help(
 }
 
 fn main() {
+    let config = Arc::new(Mutex::new(config::Config::default()));
+
+    let mut settings = config.lock().unwrap_or_else(|err| {
+        error!("Unable to get config lock, bailing...");
+        panic!("{}", err);
+    });
+    settings
+        .set_default("debug", false)
+        .expect("Unable to set a default value for debug");
+    settings
+        .merge(config::File::with_name("settings"))
+        .expect("No file called Settings.toml in same folder as bot");
+
+    let token = {
+        settings
+            .get_str("token")
+            .expect("No token/token value set in Settings file")
+    };
+
+    let enviroment = {
+        if !settings.get_bool("debug").unwrap_or_else(|_err| false) {
+            "Production"
+        } else {
+            "Staging"
+        }
+    };
+
     let _guard = sentry::init((
         "https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627",
         sentry::ClientOptions {
             max_breadcrumbs: 50,
-            environment: Some("staging".into()),
+            environment: Some(enviroment.into()),
             release: sentry::release_name!(),
             ..Default::default()
         },
@@ -110,24 +137,6 @@ fn main() {
     });
     sentry::integrations::env_logger::init(Some(log_builder.build()), Default::default());
     sentry::integrations::panic::register_panic_handler();
-
-    let config = Arc::new(Mutex::new(config::Config::default()));
-
-    let token = {
-        let mut settings = config.lock().unwrap_or_else(|err| {
-            error!("Unable to get config lock, bailing...");
-            panic!("{}", err);
-        });
-        settings
-            .set_default("debug", "false")
-            .expect("Unable to set a default value for debug");
-        settings
-            .merge(config::File::with_name("settings"))
-            .expect("No file called Settings.toml in same folder as bot");
-        settings
-            .get_str("token")
-            .expect("No token/token value set in Settings file")
-    };
 
     let mut client = Client::new(&token, Handler).expect("Err creating client");
 

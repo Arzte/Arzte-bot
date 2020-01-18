@@ -18,7 +18,7 @@ use serenity::{
 
 #[command]
 fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let _ = msg.channel_id.say(&ctx.http, format!("{} (v ``{}``) is a small utility bot, developed by <@77812253511913472>, with help from serenity and it's resources.", built_info::PKG_NAME, built_info::PKG_VERSION));
+    let _ = msg.channel_id.say(&ctx.http, format!("{} (v ``{}``) is a small utility bot, developed by <@77812253511913472>, with help from serenity and its resources.", built_info::PKG_NAME, built_info::PKG_VERSION));
     Ok(())
 }
 
@@ -51,9 +51,9 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
     let user = member.user.read();
     let nickname = member.nick.map_or("None".to_owned(), |nick| nick);
-    let member_joined = member
-        .joined_at
-        .map_or("Unavailable".to_owned(), |d| format!("{}", d));
+    let member_joined = member.joined_at.map_or("Unavailable".to_owned(), |d| {
+        d.format("%a, %d %h %Y @ %H:%M:%S").to_string()
+    });
 
     msg.channel_id
         .send_message(&ctx, move |m| {
@@ -62,7 +62,13 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                     .field("Discriminator", format!("#{:04}", user.discriminator), true)
                     .field("User ID", user.id, true)
                     .field("Nickname", nickname, true)
-                    .field("User Created", user.created_at(), true)
+                    .field(
+                        "User Created",
+                        user.created_at()
+                            .format("%a, %d %h %Y @ %H:%M:%S")
+                            .to_string(),
+                        true,
+                    )
                     .field("Joined Server", member_joined, true)
             })
         })

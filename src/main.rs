@@ -95,29 +95,33 @@ fn my_help(
 fn main() {
     let config = Arc::new(Mutex::new(config::Config::default()));
 
-    let mut settings = config.lock().unwrap_or_else(|err| {
-        error!("Unable to get config lock, bailing...");
-        panic!("{}", err);
-    });
-    settings
-        .set_default("debug", false)
-        .expect("Unable to set a default value for debug");
-    settings
-        .merge(config::File::with_name("settings"))
-        .expect("No file called Settings.toml in same folder as bot");
+    let (token, enviroment) = {
+        let mut settings = config.lock().unwrap_or_else(|err| {
+            error!("Unable to get config lock, bailing...");
+            panic!("{}", err);
+        });
 
-    let token = {
         settings
-            .get_str("token")
-            .expect("No token/token value set in Settings file")
-    };
+            .set_default("debug", false)
+            .expect("Unable to set a default value for debug");
+        settings
+            .merge(config::File::with_name("settings"))
+            .expect("No file called Settings.toml in same folder as bot");
 
-    let enviroment = {
-        if !settings.get_bool("debug").unwrap_or_else(|_err| false) {
-            "Production"
-        } else {
-            "Staging"
-        }
+        let token = {
+            settings
+                .get_str("token")
+                .expect("No token/token value set in Settings file")
+        };
+        let enviroment = {
+            if !settings.get_bool("debug").unwrap_or_else(|_err| false) {
+                "Production"
+            } else {
+                "Staging"
+            }
+        };
+
+        (token, enviroment)
     };
 
     let _guard = sentry::init((

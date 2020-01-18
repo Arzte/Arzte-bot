@@ -50,7 +50,7 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     };
 
     let user = member.user.read();
-    let nickname = member.nick.map_or("None".to_owned(), |nick| nick.clone());
+    let nickname = member.nick.map_or("None".to_owned(), |nick| nick);
     let member_joined = member
         .joined_at
         .map_or("Unavailable".to_owned(), |d| format!("{}", d));

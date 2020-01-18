@@ -71,7 +71,7 @@ impl EventHandler for Handler {
 group!({
     name: "general",
     options: {},
-    commands: [about, guild, ping, math]
+    commands: [about, user, guild, ping, math]
 });
 
 group!({

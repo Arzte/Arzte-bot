@@ -147,8 +147,13 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
         }
     };
 
-    let manager = shard_manager.lock();
-    let runners = manager.runners.lock();
+    let manager = shard_manager
+        .try_lock()
+        .ok_or("Couldn't get a lock on the shard manager")?;
+    let runners = manager
+        .runners
+        .try_lock()
+        .ok_or("Couldn't get a lock on the current shard runner")?;
 
     let runner = match runners.get(&ShardId(ctx.shard_id)) {
         Some(runner) => runner,

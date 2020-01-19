@@ -174,7 +174,7 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
             Ok(milli) => format!("{}ms", milli.num_milliseconds()),
             Err(_error) => "result is to high to calculate.".to_string(),
         },
-        None => "0ms".to_string(),
+        None => "TBD".to_string(),
     };
 
     let string = format!(

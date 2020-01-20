@@ -142,7 +142,7 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
     let mut message = msg.channel_id.say(&ctx.http, "Pong!")?;
     let timestamp = message.timestamp.timestamp_millis() - start;
 
-    let data = ctx.data.write();
+    let data = ctx.data.read();
 
     let shard_manager = match data.get::<ShardManagerContainer>() {
         Some(v) => v,

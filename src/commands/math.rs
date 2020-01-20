@@ -1,6 +1,7 @@
 use asciimath::{
     eval,
     scope,
+    Error::EmptyExpression,
     Error::UnknownVariable,
 };
 use serenity::{
@@ -26,6 +27,13 @@ fn math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         Err(err) => match err {
             UnknownVariable(_t) => {
                 let _ = msg.channel_id.say(&ctx.http, "Cannot eval with variables");
+                Ok(())
+            }
+            EmptyExpression => {
+                let _ = msg.channel_id.say(
+                    &ctx.http,
+                    "This command requires arguments to run, try ``5x123``",
+                )?;
                 Ok(())
             }
             _ => {

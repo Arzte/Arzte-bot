@@ -145,22 +145,36 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     trace!("Getting serenity's data lock...");
     let data = ctx.data.write();
 
-    message.edit(&ctx, |m| m.content("Updated! Restarting now!"))?;
+    if let Err(err) = message
+        .edit(&ctx, |m| m.content("Updated! Restarting now!"))
+        .and_then(|_t| {
+            let shard_manager = match data.get::<ShardManagerContainer>() {
+                Some(v) => v,
+                None => {
+                    error!(
+                    "Couldn't get the shard manager for a graceful shutdown, killing the bot...."
+                );
+                    std::process::exit(0);
+                }
+            };
 
-    let shard_manager = match data.get::<ShardManagerContainer>() {
-        Some(v) => v,
-        None => {
-            error!("Couldn't get the shard manager for a graceful shutdown, killing the bot....");
-            std::process::exit(0);
-        }
-    };
-
-    trace!("Getting a lock on shard_manager");
-    if let Some(mut manager) = shard_manager.try_lock() {
-        info!("Telling serenity to close all shards, then shutdown");
-        manager.shutdown_all();
-    } else {
-        error!("Couldn't get the shard manager lock for a graceful shutdown, killing the bot...");
+            trace!("Getting a lock on shard_manager");
+            if let Some(mut manager) = shard_manager.try_lock() {
+                info!("Telling serenity to close all shards, then shutdown");
+                manager.shutdown_all();
+                Ok(())
+            } else {
+                error!(
+                "Couldn't get the shard manager lock for a graceful shutdown, killing the bot..."
+            );
+                std::process::exit(0);
+            }
+        })
+    {
+        error!(
+            "Couldn't edit message: {:?}\n ungracefully killing bot",
+            err
+        );
         std::process::exit(0);
     }
 

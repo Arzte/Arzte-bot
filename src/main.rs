@@ -178,6 +178,7 @@ fn main() {
                         &format!("Try this again in {} seconds.", seconds),
                     );
                 },
+                DispatchError::OnlyForOwners => {},
                 _ => error!("{} failed: {:?}", message.content, error),
             })
             .after(|context, message, command_name, error| if let Err(why) = error {

@@ -7,11 +7,14 @@ jobs:
   # Not building on stable due to nightly features, however it's a nice to have
   allow_failures:
     - rust: stable
+    - name: clippy
   fast_finish: true
   include:
-    - stage: Check
+    - stage: Build
+      name: cargo check
       script: cargo check
     - script: cargo clippy
+      name: cargo clippy
       before_script: rustup component add clippy --toolchain=$TRAVIS_RUST_VERSION || cargo install --git https://github.com/rust-lang/rust-clippy/ --force clippy
     - stage: Github Release
       script: cargo build --release

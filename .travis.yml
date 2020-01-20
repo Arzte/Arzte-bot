@@ -8,6 +8,13 @@ jobs:
   allow_failures:
     - rust: stable
   fast_finish: true
+  include:
+    - stage: Check
+      script: cargo check
+    - stage: Github Release
+      if: tag = true
+      script:
+        - cargo build --release
 
 # Cache cargo symbols for faster build
 cache: cargo
@@ -22,9 +29,6 @@ before_script:
 # (diesel might be a reason that I'd want this later one)
 #  - cargo install cargo-update || echo "cargo-update already installed"
 #  - cargo install-update -a # update outdated cached binaries
-
-script:
-  - cargo check
 
 before_deploy:
   - npm install @sentry/cli
@@ -42,7 +46,7 @@ deploy:
     condition: $TRAVIS_RUST_VERSION = nightly
     tags: true
   provider: releases
-  skip_cleanup: true
+  cleanup: false
 
 after_deploy:
   - ./node_modules/.bin/sentry-cli releases finalize "$VERSION"

@@ -11,9 +11,28 @@ jobs:
   include:
     - stage: Check
       script: cargo check
+      script: cargo clippy
     - stage: Github Release
       script: cargo build --release
       if: tag IS present
+      before_deploy:
+        - npm install @sentry/cli
+        - export SENTRY_ORG=myself-0q
+        - export SENTRY_PROJECT=arzte-cute-bot
+        - export VERSION=`./node_modules/.bin/sentry-cli releases propose-version`
+        - ./node_modules/.bin/sentry-cli releases new "$VERSION"
+        - sh ci/before_deploy.sh
+      deploy:
+        token: $GITHUB_TOKEN
+        file_glob: true
+        file: arzte-$TRAVIS_TAG.*
+        on:
+          condition: $TRAVIS_RUST_VERSION = nightly
+        provider: releases
+        skip_cleanup: true
+
+after_deploy:
+  - ./node_modules/.bin/sentry-cli releases finalize "$VERSION"
 
 # Cache cargo symbols for faster build
 cache: cargo
@@ -28,27 +47,6 @@ before_script:
 # (diesel might be a reason that I'd want this later one)
 #  - cargo install cargo-update || echo "cargo-update already installed"
 #  - cargo install-update -a # update outdated cached binaries
-
-before_deploy:
-  - npm install @sentry/cli
-  - export SENTRY_ORG=myself-0q
-  - export SENTRY_PROJECT=arzte-cute-bot
-  - export VERSION=`./node_modules/.bin/sentry-cli releases propose-version`
-  - ./node_modules/.bin/sentry-cli releases new "$VERSION"
-  - sh ci/before_deploy.sh
-
-deploy:
-  token: $GITHUB_TOKEN
-  file_glob: true
-  file: arzte-$TRAVIS_TAG.*
-  on:
-    condition: $TRAVIS_RUST_VERSION = nightly
-    tags: true
-  provider: releases
-  skip_cleanup: true
-
-after_deploy:
-  - ./node_modules/.bin/sentry-cli releases finalize "$VERSION"
 
 notifications:
   email: false

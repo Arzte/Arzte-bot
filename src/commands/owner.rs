@@ -14,6 +14,12 @@ use serenity::{
     model::prelude::Message,
     prelude::Context,
 };
+use std::{
+    fs,
+    io,
+    os::unix::fs::PermissionsExt,
+};
+use tempdir::TempDir;
 
 #[command]
 fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
@@ -47,20 +53,15 @@ fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
 use crate::core::{
     built_info,
     structs::{
-        GithubCommit,
         GithubRelease,
         SettingsContainer,
     },
-    utils::dn_file,
 };
 
 #[command]
 fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let github_commit_json: GithubCommit =
-        reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/commits/master")?.json()?;
     let github_release_json: GithubRelease =
         reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/releases/latest")?.json()?;
-    let github_commit_sha = &github_commit_json.sha[0..7];
     let github_release_tag = github_release_json.tag_name.as_str();
 
     let debug = {
@@ -83,21 +84,18 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         settings.get_bool("debug").unwrap_or(false)
     };
 
-    if let (false, Some(local_git)) = (debug, built_info::GIT_VERSION) {
-        let num_local: i32 = local_git.replace(".", "").parse::<i32>()?;
-        let num_github: i32 = github_release_tag.replace(".", "").parse::<i32>()?;
+    if let (false, pkg_version) = (debug, built_info::PKG_VERSION) {
+        let local_verison = semver::Version::parse(pkg_version)?;
+        let github_verison = semver::Version::parse(github_release_tag)?;
 
-        if local_git == github_commit_sha
-            || num_local > num_github
-            || local_git == github_release_tag
-        {
+        if local_verison == github_verison {
             if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "Already at latest version!") {
                 std::thread::sleep(std::time::Duration::from_secs(3));
                 let _latest_delete_msg = msg_latest.delete(&ctx);
-                if let Err(_missing_perms) = msg.delete(&ctx) {}
+                let _missing_perms = msg.delete(&ctx);
             }
             return Ok(());
-        } else if github_release_json.assets.is_empty() {
+        } else if github_release_json.assets.is_empty() && local_verison > github_verison {
             if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "There's a release, however Travis hasn't successfully built the new version yet, perhaps try again in a few minutes?") {
                 std::thread::sleep(std::time::Duration::from_secs(10));
                 let _ = msg_latest.delete(&ctx);
@@ -105,15 +103,37 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
             }
         }
     };
+
     let mut message = msg
         .channel_id
         .say(&ctx.http, "Now updating Arzte's Cute Bot, please wait....")?;
 
-    let github_release_download = &github_release_json.assets[0].browser_download_url;
-    let github_release_download = github_release_download.clone();
-
     trace!("Downloading the latest release from github...");
-    dn_file(&github_release_download, "arzte.tar.gz", "arzte")?;
+    // In a seperate context because TempDir only needs to exist till the file is finished downloading
+    {
+        let tmp_dir = TempDir::new("arzte.download")?;
+        let download_file = "arzte.tar.gz";
+        let final_file = "arzte";
+        let mut response = reqwest::get(&github_release_json.assets[0].browser_download_url)?;
+
+        let mut dest = fs::File::create(tmp_dir.path().join(download_file))?;
+
+        io::copy(&mut response, &mut dest)?;
+
+        trace!("Opening the file.");
+        let tar_gz = fs::File::open(tmp_dir.path().join(&download_file))?;
+        let tar = flate2::read::GzDecoder::new(tar_gz);
+        let mut ar = tar::Archive::new(tar);
+        ar.unpack(".")?;
+
+        let file = format!("{}/{}", ".", final_file);
+        let dest = std::path::Path::new(&file);
+
+        trace!("Copying bot bin to replace old bot bin");
+        fs::copy(tmp_dir.path().join(final_file), dest)?;
+
+        fs::metadata(dest)?.permissions().set_mode(0o755);
+    }
 
     info!("Telling raven to finish what it is doing");
     if let Some(client) = Hub::current().client() {

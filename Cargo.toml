@@ -1,6 +1,6 @@
 [package]
 name = "arzte"
-version = "0.9.6"
+version = "0.9.7"
 authors = ["Iris Hoffmeyer <hoffmeyer25@gmail.com>"]
 publish = false
 build = "build.rs"
@@ -11,7 +11,7 @@ pretty_env_logger = "0.3"
 kankyo = "0.3"
 log = "0.4"
 asciimath = "0.8"
-config = "0.9"
+config = "0.10.1"
 rand = "0.7"
 chrono = "0.4"
 typemap = "0.3"
@@ -34,4 +34,4 @@ version = "0.8.0"
 features = ["cache", "http", "framework", "standard_framework", "rustls_backend"]
 
 [build-dependencies]
-built = "0.3.1"
+built = "0.3"

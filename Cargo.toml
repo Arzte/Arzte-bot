@@ -1,6 +1,6 @@
 [package]
 name = "arzte"
-version = "0.9.5"
+version = "0.9.6"
 authors = ["Iris Hoffmeyer <hoffmeyer25@gmail.com>"]
 publish = false
 build = "build.rs"
@@ -30,7 +30,7 @@ failure = "0.1"
 semver = "0.9"
 
 [dependencies.serenity]
-version = "0.7"
+version = "0.8.0"
 features = ["cache", "http", "framework", "standard_framework", "rustls_backend"]
 
 [build-dependencies]

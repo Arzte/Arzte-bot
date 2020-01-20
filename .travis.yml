@@ -12,9 +12,8 @@ jobs:
     - stage: Check
       script: cargo check
     - stage: Github Release
+      script: cargo build --release
       if: tag IS present
-      script:
-        - cargo build --release
 
 # Cache cargo symbols for faster build
 cache: cargo

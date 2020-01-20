@@ -70,19 +70,19 @@ impl EventHandler for Handler {
     }
 }
 
-group!({
-    name: "general",
-    options: {},
-    commands: [about, user, avatar, guild, ping, math]
-});
+#[group]
+#[commands(about, user, avatar, guild, ping, math)]
+struct General;
 
-group!({
-    name: "Owners",
-    options: {owners_only: true, help_available: false},
-    commands: [quit, update]
-});
+#[group]
+#[owners_only]
+#[description = "Commands that can only be ran by the owner of the bot"]
+#[commands(quit, update)]
+struct Owners;
 
 #[help]
+#[lacking_permissions = "Hide"]
+#[wrong_channel = "Strike"]
 fn my_help(
     context: &mut Context,
     msg: &Message,

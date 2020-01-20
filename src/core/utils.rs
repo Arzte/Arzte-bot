@@ -3,6 +3,7 @@ use serenity::framework::standard::CommandResult;
 use std::{
     fs,
     io,
+    os::unix::fs::PermissionsExt,
 };
 use tempdir::TempDir;
 
@@ -20,10 +21,13 @@ pub fn dn_file(url: &str, download_file: &str, final_file: &str) -> CommandResul
     let mut ar = tar::Archive::new(tar);
     ar.unpack(".")?;
 
+    let file = format!("{}/{}", ".", final_file);
+    let dest = std::path::Path::new(&file);
+
     trace!("Copying bot bin to replace old bot bin");
-    fs::copy(
-        tmp_dir.path().join(final_file),
-        std::path::Path::new(&format!("{}/{}", ".", final_file)),
-    )?;
+    fs::copy(tmp_dir.path().join(final_file), dest)?;
+
+    fs::metadata(dest)?.permissions().set_mode(0o755);
+
     Ok(())
 }

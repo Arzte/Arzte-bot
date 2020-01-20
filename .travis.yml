@@ -12,7 +12,7 @@ jobs:
     - stage: Check
       script: cargo check
     - stage: Github Release
-      if: tag = true
+      if: tag IS present
       script:
         - cargo build --release
 

@@ -1,5 +1,6 @@
 #![recursion_limit = "128"]
 #![allow(proc_macro_derive_resolution_fallback)]
+#![feature(try_blocks)]
 
 mod commands;
 pub mod core;
@@ -8,6 +9,7 @@ pub mod core;
 use log::{
     error,
     info,
+    trace,
     warn,
 };
 
@@ -71,7 +73,7 @@ impl EventHandler for Handler {
 group!({
     name: "general",
     options: {},
-    commands: [about, user, guild, ping, math]
+    commands: [about, user, avatar, guild, ping, math]
 });
 
 group!({

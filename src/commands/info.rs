@@ -1,6 +1,13 @@
 use crate::core::built_info;
 use crate::ShardManagerContainer;
 use chrono::Duration;
+#[allow(unused_imports)]
+use log::{
+    error,
+    info,
+    trace,
+    warn,
+};
 use serenity::{
     client::bridge::gateway::ShardId,
     framework::standard::{
@@ -76,6 +83,42 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
+#[description = "Shows the avatar for the user or specified user."]
+fn avatar(context: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    let face = if msg.mentions.is_empty() {
+        if args.is_empty() {
+            msg.author.face()
+        } else {
+            let result: Result<String, Box<dyn std::error::Error>> = try {
+                msg.guild_id
+                    .ok_or("Failed to get GuildId from Message")?
+                    .to_guild_cached(&context)
+                    .ok_or("Failed to get Guild from GuildId")?
+                    .read()
+                    .members_starting_with(args.rest(), false, true)
+                    .first()
+                    .ok_or("Could not find member")?
+                    .user_id()
+                    .to_user(&context)?
+                    .face()
+            };
+            match result {
+                Ok(face) => face,
+                Err(e) => {
+                    error!("While searching for user: {}", e);
+                    msg.author.face()
+                }
+            }
+        }
+    } else {
+        msg.mentions[0].face()
+    };
+    msg.channel_id
+        .send_message(&context, |m| m.embed(|e| e.image(face)))
+        .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
+}
+
+#[command]
 #[description = "Shows various information about a guild."]
 #[only_in("guilds")]
 fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
@@ -137,6 +180,7 @@ fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 }
 
 #[command]
+#[description = "Does a quick test to find out the latancy of Discord Relative to the bot"]
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
     let start = msg.timestamp.timestamp_millis();
     let mut message = msg.channel_id.say(&ctx.http, "Pong!")?;

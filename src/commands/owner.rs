@@ -1,9 +1,11 @@
 use crate::ShardManagerContainer;
 use chrono::Duration;
+#[allow(unused_imports)]
 use log::{
     error,
     info,
     trace,
+    warn,
 };
 use sentry::Hub;
 use serenity::{
@@ -132,7 +134,7 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         trace!("Copying bot bin to replace old bot bin");
         fs::copy(tmp_dir.path().join(final_file), dest)?;
 
-        fs::metadata(dest)?.permissions().set_mode(0o755);
+        fs::metadata(dest)?.permissions().set_mode(0o775);
     }
 
     info!("Telling raven to finish what it is doing");

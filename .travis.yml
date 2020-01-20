@@ -46,7 +46,7 @@ deploy:
     condition: $TRAVIS_RUST_VERSION = nightly
     tags: true
   provider: releases
-  cleanup: false
+  skip_cleanup: true
 
 after_deploy:
   - ./node_modules/.bin/sentry-cli releases finalize "$VERSION"

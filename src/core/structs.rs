@@ -5,7 +5,7 @@ use serde::{
 
 // Structs for the latest github release API response
 // https://api.github.com/repos/:owner/:repo/releases/latest
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GithubRelease {
     url: String,
     assets_url: String,
@@ -27,7 +27,7 @@ pub struct GithubRelease {
     body: Option<serde_json::Value>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Asset {
     url: String,
     id: i64,
@@ -44,7 +44,7 @@ pub struct Asset {
     pub(crate) browser_download_url: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Author {
     login: String,
     id: i64,

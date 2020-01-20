@@ -54,10 +54,7 @@ fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 use crate::core::{
     built_info,
-    structs::{
-        GithubRelease,
-        SettingsContainer,
-    },
+    structs::GithubRelease,
 };
 
 #[command]
@@ -65,46 +62,24 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     let github_release_json: GithubRelease =
         reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/releases/latest")?.json()?;
     let github_release_tag = github_release_json.tag_name.as_str();
+    let local_verison = semver::Version::parse(built_info::PKG_VERSION)?;
+    let github_verison = semver::Version::parse(github_release_tag)?;
 
-    let debug = {
-        let data = ctx.data.read();
-
-        trace!("Getting settings mutex from data...");
-        let settings_manager = {
-            match data.get::<SettingsContainer>() {
-                Some(v) => v,
-                None => {
-                    error!("Error getting settings container.");
-
-                    return Ok(());
-                }
-            }
-        };
-
-        trace!("Getting lock for settings manager");
-        let settings = settings_manager.try_lock()?;
-        settings.get_bool("debug").unwrap_or(false)
-    };
-
-    if let (false, pkg_version) = (debug, built_info::PKG_VERSION) {
-        let local_verison = semver::Version::parse(pkg_version)?;
-        let github_verison = semver::Version::parse(github_release_tag)?;
-
-        if local_verison == github_verison {
-            if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "Already at latest version!") {
-                std::thread::sleep(std::time::Duration::from_secs(3));
-                let _latest_delete_msg = msg_latest.delete(&ctx);
-                let _missing_perms = msg.delete(&ctx);
-            }
-            return Ok(());
-        } else if github_release_json.assets.is_empty() && local_verison > github_verison {
-            if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "There's a release, however Travis hasn't successfully built the new version yet, perhaps try again in a few minutes?") {
+    if local_verison == github_verison {
+        if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "Already at latest version!") {
+            std::thread::sleep(std::time::Duration::from_secs(3));
+            let _latest_delete_msg = msg_latest.delete(&ctx);
+            let _missing_perms = msg.delete(&ctx);
+        }
+        return Ok(());
+    } else if github_release_json.assets.is_empty() || local_verison > github_verison {
+        if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "There's a release, however Travis hasn't successfully built the new version yet, perhaps try again in a few minutes?") {
                 std::thread::sleep(std::time::Duration::from_secs(10));
                 let _ = msg_latest.delete(&ctx);
                 let _ = msg.delete(&ctx);
             }
-        }
-    };
+        return Ok(());
+    }
 
     let mut message = msg
         .channel_id

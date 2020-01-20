@@ -12,7 +12,7 @@ jobs:
     - stage: Check
       script: cargo check
     - script: cargo clippy
-      before_script: rustup component add clippy --toolchain $TRAVIS_RUST_VERSION-x86_64-unknown-linux-gnu
+      before_script: rustup component add clippy --toolchain=$TRAVIS_RUST_VERSION || cargo install --git https://github.com/rust-lang/rust-clippy/ --force clippy
     - stage: Github Release
       script: cargo build --release
       if: tag IS present
@@ -37,6 +37,11 @@ after_deploy:
 
 # Cache cargo symbols for faster build
 cache: cargo
+
+# Remove older cargo symbols for faster cache
+before_cache:
+  - cargo install --force --git https://github.com/matthiaskrgr/cargo-cache --no-default-features --features ci-autoclean cargo-cache
+  - cargo-cache
 
 before_cache:
   # Travis can't cache files that are not readable by "others"

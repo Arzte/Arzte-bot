@@ -92,22 +92,19 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         let download_file = "arzte.tar.gz";
         let final_file = "arzte";
         let mut response = reqwest::get(&github_release_json.assets[0].browser_download_url)?;
+        let mut destination_file = fs::File::create(tmp_dir.path().join(download_file))?;
+        let file = format!("{}/{}", ".", final_file);
+        let dest = std::path::Path::new(&file);
 
-        let mut dest = fs::File::create(tmp_dir.path().join(download_file))?;
+        io::copy(&mut response, &mut destination_file)?;
 
-        io::copy(&mut response, &mut dest)?;
+        fs::copy(tmp_dir.path().join(download_file), dest)?;
 
         trace!("Opening the file.");
         let tar_gz = fs::File::open(tmp_dir.path().join(&download_file))?;
         let tar = flate2::read::GzDecoder::new(tar_gz);
         let mut ar = tar::Archive::new(tar);
         ar.unpack(".")?;
-
-        let file = format!("{}/{}", ".", final_file);
-        let dest = std::path::Path::new(&file);
-
-        trace!("Copying bot bin to replace old bot bin");
-        fs::copy(tmp_dir.path().join(final_file), dest)?;
 
         fs::metadata(dest)?.permissions().set_mode(0o775);
     }

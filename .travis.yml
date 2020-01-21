@@ -32,8 +32,6 @@ jobs:
         token: $GITHUB_TOKEN
         file_glob: true
         file: arzte-$TRAVIS_TAG.*
-        on:
-          condition: $TRAVIS_RUST_VERSION = nightly
         provider: releases
         skip_cleanup: true
 

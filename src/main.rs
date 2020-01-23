@@ -179,11 +179,12 @@ fn main() {
                     );
                 },
                 DispatchError::OnlyForOwners => {},
-                _ => error!("{} failed: {:?}", message.content, error),
+                DispatchError::IgnoredBot => {},
+                _ => error!("Dispatch Error: {} failed: {:?}", message.content, error),
             })
             .after(|context, message, command_name, error| if let Err(why) = error {
                     let _ = message.channel_id.say(&context.http, "An unexpected error occured when running this command, please try again later.");
-                    error!("Command {} triggered by {}: {:#?}", command_name, message.author.tag(), why);
+                    error!("Command Error: {} triggered by {} has errored: {:#?}", command_name, message.author.tag(), why);
             })
             .help(&MY_HELP)
             .group(&GENERAL_GROUP)

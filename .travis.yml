@@ -3,6 +3,11 @@ os: linux
 language: rust
 rust: nightly
 
+env:
+  global:
+    - CARGO_INCREMENTAL=0 # Incremental compilation is slower and bloats the travis cache
+    - RUST_BACKTRACE=1
+
 jobs:
   # Not building on stable due to nightly features, however it's a nice to have
   allow_failures:
@@ -46,7 +51,7 @@ cache: cargo
 before_cache:
   # Travis can't cache files that are not readable by "others"
   - chmod -R a+r $HOME/.cargo
-  # Remove older cargo symbols for faster cache
+  # Remove unneeded cargo symbols for faster cache
   - cargo install --force --git https://github.com/matthiaskrgr/cargo-cache --no-default-features --features ci-autoclean cargo-cache
   - cargo-cache
 

@@ -60,7 +60,8 @@ use crate::core::{
 #[command]
 fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     let github_release_json: GithubRelease =
-        reqwest::get("https://api.github.com/repos/Arzte/Arzte-bot/releases/latest")?.json()?;
+        reqwest::blocking::get("https://api.github.com/repos/Arzte/Arzte-bot/releases/latest")?
+            .json()?;
     let github_release_tag = github_release_json.tag_name.as_str();
     let local_verison = semver::Version::parse(built_info::PKG_VERSION)?;
     let github_verison = semver::Version::parse(github_release_tag)?;
@@ -91,7 +92,8 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         let tmp_dir = TempDir::new("arzte.download")?;
         let download_file = "arzte.tar.gz";
         let final_file = "arzte";
-        let mut response = reqwest::get(&github_release_json.assets[0].browser_download_url)?;
+        let mut response =
+            reqwest::blocking::get(&github_release_json.assets[0].browser_download_url)?;
         let mut destination_file = fs::File::create(tmp_dir.path().join(download_file))?;
         let file = format!("{}/{}", ".", final_file);
         let dest = std::path::Path::new(&file);

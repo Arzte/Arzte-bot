@@ -87,29 +87,24 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         .say(&ctx.http, "Now updating Arzte's Cute Bot, please wait....")?;
 
     trace!("Downloading the latest release from github...");
-    // In a seperate context because TempDir only needs to exist till the file is finished downloading
-    {
-        let tmp_dir = TempDir::new("arzte.download")?;
-        let download_file = "arzte.tar.gz";
-        let final_file = "arzte";
-        let mut response =
-            reqwest::blocking::get(&github_release_json.assets[0].browser_download_url)?;
-        let mut destination_file = fs::File::create(tmp_dir.path().join(download_file))?;
-        let file = format!("{}/{}", ".", final_file);
-        let dest = std::path::Path::new(&file);
 
-        io::copy(&mut response, &mut destination_file)?;
+    let download_file = "arzte.tar.gz";
+    let mut response = reqwest::blocking::get(&github_release_json.assets[0].browser_download_url)?;
+    let file = format!("{}/{}", ".", download_file);
+    let mut download = std::fs::File::open(&file)?;
+    let dest = std::path::Path::new(&file);
 
-        fs::copy(tmp_dir.path().join(download_file), dest)?;
+    response.copy_to(&mut download)?;
 
-        trace!("Opening the file.");
-        let tar_gz = fs::File::open(tmp_dir.path().join(&download_file))?;
-        let tar = flate2::read::GzDecoder::new(tar_gz);
-        let mut ar = tar::Archive::new(tar);
-        ar.unpack(".")?;
+    trace!("Opening the file.");
+    let tar_gz = fs::File::open(dest)?;
+    let tar = flate2::read::GzDecoder::new(tar_gz);
+    let mut ar = tar::Archive::new(tar);
+    ar.unpack(".")?;
 
-        fs::metadata(dest)?.permissions().set_mode(0o775);
-    }
+    fs::remove_file(dest)?;
+
+    fs::metadata(dest)?.permissions().set_mode(0o775);
 
     info!("Telling raven to finish what it is doing");
     if let Some(client) = Hub::current().client() {

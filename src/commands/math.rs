@@ -15,6 +15,7 @@ use serenity::{
 };
 
 #[command]
+#[min_args(1)]
 fn math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let scope_empty = scope! {};
     let value = eval(&args.rest(), &scope_empty);

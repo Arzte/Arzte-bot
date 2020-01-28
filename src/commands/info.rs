@@ -182,7 +182,7 @@ fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 #[command]
 #[description = "Does a quick test to find out the latancy of Discord Relative to the bot"]
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let start = msg.timestamp.timestamp_millis();
+    let start = chrono::offset::Utc::now().timestamp_millis();
     let mut message = msg.channel_id.say(&ctx.http, "Pong!")?;
     let timestamp = message.timestamp.timestamp_millis() - start;
 

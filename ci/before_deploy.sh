@@ -17,8 +17,6 @@ main() {
 
     test -f Cargo.lock || cargo generate-lockfile
 
-    cargo build --bin arzte --release
-
     cp target/$TARGET/release/arzte $stage/
 
     cd $stage

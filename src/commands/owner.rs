@@ -80,9 +80,11 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     if bot_verison == github_latest_release_version {
         if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "Already at latest version!") {
-            std::thread::sleep(std::time::Duration::from_secs(3));
-            let _latest_delete_msg = msg_latest.delete(&ctx);
-            let _missing_perms = msg.delete(&ctx);
+            std::thread::sleep(std::time::Duration::from_secs(10));
+            // If the message can't be deleted, don't delete at all
+            if let Err(_) = msg.delete(&ctx) {
+                let _ = msg_latest.delete(&ctx);
+            };
         }
         return Ok(());
     } else if github_latest_release.assets.is_empty()
@@ -90,8 +92,10 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     {
         if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "There's a release, however Travis hasn't successfully built the new version yet, perhaps try again in a few minutes?") {
                 std::thread::sleep(std::time::Duration::from_secs(10));
-                let _ = msg_latest.delete(&ctx);
-                let _ = msg.delete(&ctx);
+                // If the message can't be deleted, don't delete at all
+                if let Err(_) = msg.delete(&ctx) {
+                    let _ = msg_latest.delete(&ctx);
+                };
             }
         return Ok(());
     }

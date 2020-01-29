@@ -35,6 +35,7 @@ jobs:
         - export SENTRY_PROJECT=arzte-cute-bot
         - export VERSION=`./node_modules/.bin/sentry-cli releases propose-version`
         - ./node_modules/.bin/sentry-cli releases new "$VERSION"
+        - cargo install --force blake2_bin
         - sh ci/before_deploy.sh
       deploy:
         token: $GITHUB_TOKEN

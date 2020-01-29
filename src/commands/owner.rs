@@ -86,7 +86,7 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "Already at latest version!") {
             std::thread::sleep(std::time::Duration::from_secs(10));
             // If the message can't be deleted, don't delete at all
-            if msg.delete(&ctx).is_err() {
+            if !msg.delete(&ctx).is_err() {
                 let _ = msg_latest.delete(&ctx);
             };
         }
@@ -97,7 +97,7 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "There's a release, however Travis hasn't successfully built the new version yet, perhaps try again in a few minutes?") {
                 std::thread::sleep(std::time::Duration::from_secs(10));
                 // If the message can't be deleted, don't delete at all
-                if msg.delete(&ctx).is_err() {
+                if !msg.delete(&ctx).is_err() {
                     let _ = msg_latest.delete(&ctx);
                 };
             }

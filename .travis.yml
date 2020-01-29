@@ -1,7 +1,10 @@
 dist: trusty
 os: linux
 language: rust
-rust: nightly
+rust:
+  - nightly
+  # Not building on stable due to nightly features, however it's a nice to have
+  # - stable
 
 env:
   global:
@@ -9,10 +12,10 @@ env:
     - RUST_BACKTRACE=1
 
 jobs:
-  # Not building on stable due to nightly features, however it's a nice to have
   allow_failures:
-    - rust: stable
-    - name: clippy
+    # Not building on stable due to nightly features, however it's a nice to have
+    # - rust: stable
+    - name: cargo clippy
   fast_finish: true
   include:
     - stage: Build

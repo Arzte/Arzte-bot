@@ -18,10 +18,8 @@ use serenity::{
 };
 use std::{
     fs,
-    io,
     os::unix::fs::PermissionsExt,
 };
-use tempdir::TempDir;
 
 #[command]
 fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
@@ -60,11 +58,21 @@ use crate::core::{
 
 #[command]
 fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let github_latest_release: GithubRelease =
-        reqwest::blocking::get("https://api.github.com/repos/Arzte/Arzte-bot/releases/latest")?
-            .json()?;
-    let github_tags: GithubTag =
-        reqwest::blocking::get("https://api.github.com/repos/Arzte/Arzte-bot/tags")?.json()?;
+    let reqwest = reqwest::blocking::ClientBuilder::new()
+        .user_agent(format!(
+            "{}/{}",
+            built_info::PKG_NAME,
+            built_info::PKG_VERSION
+        ))
+        .build()?;
+    let github_latest_release: GithubRelease = reqwest
+        .get("https://api.github.com/repos/Arzte/Arzte-bot/releases/latest")
+        .send()?
+        .json()?;
+    let github_tags: GithubTag = reqwest
+        .get("https://api.github.com/repos/Arzte/Arzte-bot/tags")
+        .send()?
+        .json()?;
     let github_latest_release_tag = github_latest_release.tag_name.as_str();
     let bot_verison = semver::Version::parse(built_info::PKG_VERSION)?;
     let github_latest_release_version = semver::Version::parse(github_latest_release_tag)?;
@@ -95,11 +103,11 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     trace!("Downloading the latest release from github...");
 
     let download_file = "arzte.tar.gz";
-    let mut response =
-        reqwest::blocking::get(&github_latest_release.assets[0].browser_download_url)?;
-    let file = format!("{}/{}", ".", download_file);
-    let mut download = std::fs::File::open(&file)?;
-    let dest = std::path::Path::new(&file);
+    let mut response = reqwest
+        .get(&github_latest_release.assets[0].browser_download_url)
+        .send()?;
+    let mut download = std::fs::File::create(download_file)?;
+    let dest = std::path::Path::new(download_file);
 
     response.copy_to(&mut download)?;
 
@@ -111,7 +119,8 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     fs::remove_file(dest)?;
 
-    fs::metadata(dest)?.permissions().set_mode(0o775);
+    let bin = std::path::Path::new("arzte");
+    fs::metadata(bin)?.permissions().set_mode(0o755);
 
     info!("Telling raven to finish what it is doing");
     if let Some(client) = Hub::current().client() {

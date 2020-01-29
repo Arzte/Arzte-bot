@@ -184,7 +184,7 @@ fn main() {
             })
             .after(|context, message, command_name, error| if let Err(why) = error {
                     let _ = message.channel_id.say(&context.http, "An unexpected error occured when running this command, please try again later.");
-                    error!("Command Error: {} triggered by {} has errored: {:#?}", command_name, message.author.tag(), why);
+                    error!("Command {} triggered by {} has errored: \n{:#?}", command_name, message.author.tag(), why);
             })
             .help(&MY_HELP)
             .group(&GENERAL_GROUP)

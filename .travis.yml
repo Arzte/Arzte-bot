@@ -8,7 +8,7 @@ rust:
 
 env:
   global:
-    # incremtal is good actually - CARGO_INCREMENTAL=0 # Incremental compilation is slower and bloats the travis cache
+    - CARGO_INCREMENTAL=0 # Incremental compilation is slower and bloats the travis cache
     - RUST_BACKTRACE=1
 
 jobs:

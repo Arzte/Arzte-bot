@@ -1,8 +1,4 @@
 use crate::ShardManagerContainer;
-use blake2::{
-    Blake2b,
-    Digest,
-};
 use chrono::Duration;
 #[allow(unused_imports)]
 use log::{
@@ -23,7 +19,6 @@ use serenity::{
 use std::{
     fs,
     fs::File,
-    io,
     os::unix::fs::PermissionsExt,
     path::Path,
 };
@@ -133,17 +128,13 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     ar.unpack(".")?;
 
     let bin_path = Path::new("arzte-bot");
-    let mut bin = File::open(bin_path)?;
-    let mut hasher = Blake2b::new();
-
-    io::copy(&mut bin, &mut hasher)?;
-
-    let hash = hasher.result();
+    let hash = blake2b_simd::blake2b(&fs::read(bin_path)?[..]).to_hex();
     let bin_hash_path = Path::new("arzte-bot.blake2");
-    let bin_hash = Blake2b::digest(fs::read_to_string(bin_hash_path)?.as_bytes());
+    let bin_hash = fs::read_to_string(bin_path)?;
+    let bin_hash_str = bin_hash.trim_end_matches('\n');
     fs::remove_file(bin_hash_path)?;
 
-    if hash != bin_hash {
+    if &hash != bin_hash_str {
         let _ = message.edit(&ctx, |m| {
             m.content("Hash check failed, can't update Arzte's Cute Bot")
         });
@@ -157,6 +148,7 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     fs::rename(bin_path, "arzte")?;
     fs::metadata("arzte")?.permissions().set_mode(0o755);
 
+    // Leave archive to last incase of failure before this point (easier to fix ssh wise)
     fs::remove_file(dest)?;
 
     info!("Telling raven to finish what it is doing");

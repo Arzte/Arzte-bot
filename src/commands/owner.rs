@@ -55,25 +55,31 @@ fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
 use crate::core::{
     built_info,
     structs::GithubRelease,
+    structs::GithubTag,
 };
 
 #[command]
 fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let github_release_json: GithubRelease =
+    let github_latest_release: GithubRelease =
         reqwest::blocking::get("https://api.github.com/repos/Arzte/Arzte-bot/releases/latest")?
             .json()?;
-    let github_release_tag = github_release_json.tag_name.as_str();
-    let local_verison = semver::Version::parse(built_info::PKG_VERSION)?;
-    let github_verison = semver::Version::parse(github_release_tag)?;
+    let github_tags: GithubTag =
+        reqwest::blocking::get("https://api.github.com/repos/Arzte/Arzte-bot/tags")?.json()?;
+    let github_latest_release_tag = github_latest_release.tag_name.as_str();
+    let bot_verison = semver::Version::parse(built_info::PKG_VERSION)?;
+    let github_latest_release_version = semver::Version::parse(github_latest_release_tag)?;
+    let github_latest_tag_verison = semver::Version::parse(github_tags[0].name.as_ref())?;
 
-    if local_verison == github_verison {
+    if bot_verison == github_latest_release_version {
         if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "Already at latest version!") {
             std::thread::sleep(std::time::Duration::from_secs(3));
             let _latest_delete_msg = msg_latest.delete(&ctx);
             let _missing_perms = msg.delete(&ctx);
         }
         return Ok(());
-    } else if github_release_json.assets.is_empty() || local_verison > github_verison {
+    } else if github_latest_release.assets.is_empty()
+        || github_latest_tag_verison > github_latest_release_version
+    {
         if let Ok(msg_latest) = msg.channel_id.say(&ctx.http, "There's a release, however Travis hasn't successfully built the new version yet, perhaps try again in a few minutes?") {
                 std::thread::sleep(std::time::Duration::from_secs(10));
                 let _ = msg_latest.delete(&ctx);
@@ -89,7 +95,8 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     trace!("Downloading the latest release from github...");
 
     let download_file = "arzte.tar.gz";
-    let mut response = reqwest::blocking::get(&github_release_json.assets[0].browser_download_url)?;
+    let mut response =
+        reqwest::blocking::get(&github_latest_release.assets[0].browser_download_url)?;
     let file = format!("{}/{}", ".", download_file);
     let mut download = std::fs::File::open(&file)?;
     let dest = std::path::Path::new(&file);

@@ -67,6 +67,24 @@ struct Author {
     site_admin: bool,
 }
 
+pub type GithubTag = Vec<GithubTagElement>;
+
+// Structs for a github tag
+// https://api.github.com/repos/:owner/:repo/tags
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GithubTagElement {
+    pub(crate) name: String,
+    commit: Commit,
+    zipball_url: String,
+    tarball_url: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Commit {
+    sha: String,
+    url: String,
+}
+
 // This is the struct and implementation for a ShardManager Container,
 // which allows for non serenity items to access the shardmanger,
 use serenity::client::bridge::gateway::ShardManager;

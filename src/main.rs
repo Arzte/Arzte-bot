@@ -87,7 +87,9 @@ struct Info;
 struct Owners;
 
 #[help]
-#[lacking_permissions = "Hide"]
+#[lacking_ownership = "hide"]
+#[lacking_role = "hide"]
+#[lacking_permissions = "strike"]
 #[wrong_channel = "Strike"]
 fn my_help(
     context: &mut Context,
@@ -97,7 +99,7 @@ fn my_help(
     groups: &[&'static CommandGroup],
     owners: HashSet<UserId>,
 ) -> CommandResult {
-    help_commands::with_embeds(context, msg, args, &help_options, groups, owners)
+    help_commands::plain(context, msg, args, &help_options, groups, owners)
 }
 
 fn main() {

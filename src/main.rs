@@ -196,6 +196,7 @@ fn main() {
             .help(&MY_HELP)
             .group(&GENERAL_GROUP)
             .group(&OWNERS_GROUP)
+            .group(&INFO_GROUP)
     );
 
     if let Err(why) = client.start_autosharded() {

@@ -133,7 +133,7 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     let bin_path = Path::new("arzte-bot");
     let hash = blake2b_simd::blake2b(&fs::read(bin_path)?[..]).to_hex();
     let bin_hash_path = Path::new("arzte-bot.blake2");
-    let bin_hash = fs::read_to_string(bin_path)?;
+    let bin_hash = fs::read_to_string(bin_hash_path)?;
     let bin_hash_str = bin_hash.trim_end_matches('\n');
     fs::remove_file(bin_hash_path)?;
 

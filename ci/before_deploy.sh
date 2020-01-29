@@ -17,7 +17,8 @@ main() {
 
     test -f Cargo.lock || cargo generate-lockfile
 
-    cp target/$TARGET/release/arzte $stage/
+    cp target/$TARGET/release/arzte $stage/arzte-bot
+    b2sum $stage/arzte-bot > arzte-bot.blake2
 
     cd $stage
     tar czf $src/arzte-$TRAVIS_TAG.tar.gz *

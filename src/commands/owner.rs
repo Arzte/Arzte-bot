@@ -1,4 +1,8 @@
 use crate::ShardManagerContainer;
+use blake2::{
+    Blake2b,
+    Digest,
+};
 use chrono::Duration;
 #[allow(unused_imports)]
 use log::{
@@ -18,7 +22,10 @@ use serenity::{
 };
 use std::{
     fs,
+    fs::File,
+    io,
     os::unix::fs::PermissionsExt,
+    path::Path,
 };
 
 #[command]
@@ -100,9 +107,10 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         return Ok(());
     }
 
-    let mut message = msg
-        .channel_id
-        .say(&ctx.http, "Now updating Arzte's Cute Bot, please wait....")?;
+    let mut message = msg.channel_id.say(
+        &ctx.http,
+        "Now downloading a new version of Arzte's Cute Bot, please wait....",
+    )?;
 
     trace!("Downloading the latest release from github...");
 
@@ -110,21 +118,43 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     let mut response = reqwest
         .get(&github_latest_release.assets[0].browser_download_url)
         .send()?;
-    let mut download = std::fs::File::create(download_file)?;
-    let dest = std::path::Path::new(download_file);
+    let mut download = File::create(download_file)?;
+    let dest = Path::new(download_file);
 
     response.copy_to(&mut download)?;
 
     trace!("Opening the file.");
-    let tar_gz = fs::File::open(dest)?;
+    let tar_gz = File::open(dest)?;
     let tar = flate2::read::GzDecoder::new(tar_gz);
     let mut ar = tar::Archive::new(tar);
     ar.unpack(".")?;
 
-    fs::remove_file(dest)?;
+    let bin_path = Path::new("arzte-bot");
+    let mut bin = File::open(bin_path)?;
+    let mut hasher = Blake2b::new();
 
-    let bin = std::path::Path::new("arzte");
-    fs::metadata(bin)?.permissions().set_mode(0o755);
+    io::copy(&mut bin, &mut hasher)?;
+
+    let hash = hasher.result();
+    let bin_hash_path = Path::new("arzte-bot.blake2");
+    let bin_hash = Blake2b::digest(fs::read_to_string(bin_hash_path)?.as_bytes());
+    fs::remove_file(bin_hash_path)?;
+
+    if hash != bin_hash {
+        let _ = message.edit(&ctx, |m| {
+            m.content("Hash check failed, can't update Arzte's Cute Bot")
+        });
+        fs::remove_file(bin_path)?;
+        return Ok(());
+    }
+
+    let _ = message.edit(&ctx, |m| {
+        m.content("Download was successful, updating Arzte's Cute Bot....")
+    });
+    fs::rename(bin_path, "arzte")?;
+    fs::metadata("arzte")?.permissions().set_mode(0o755);
+
+    fs::remove_file(dest)?;
 
     info!("Telling raven to finish what it is doing");
     if let Some(client) = Hub::current().client() {

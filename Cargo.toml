@@ -27,6 +27,7 @@ tar = "0.4"
 flate2 = "1.0"
 failure = "0.1"
 semver = "0.9"
+blake2 = "0.8"
 
 [dependencies.serenity]
 version = "0.8.0"

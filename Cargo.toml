@@ -1,6 +1,6 @@
 [package]
 name = "arzte"
-version = "0.9.10"
+version = "0.9.11"
 authors = ["Iris Hoffmeyer <hoffmeyer25@gmail.com>"]
 publish = false
 build = "build.rs"
@@ -23,7 +23,6 @@ serde_json = "1.0"
 reqwest = "0.10"
 meval = "0.2"
 sentry = "0.17"
-tempdir = "0.3"
 tar = "0.4"
 flate2 = "1.0"
 failure = "0.1"

@@ -180,6 +180,9 @@ fn main() {
                 },
                 DispatchError::OnlyForOwners => {},
                 DispatchError::IgnoredBot => {},
+                DispatchError::NotEnoughArguments{ min, given} => {
+                    let _ = message.channel_id.say(&context.http, format!("You did not provide enough arguments for this command, Minimum arguments are {}, you provided {}.", min, given));
+                }
                 _ => error!("Dispatch Error: {} failed: {:?}", message.content, error),
             })
             .after(|context, message, command_name, error| if let Err(why) = error {

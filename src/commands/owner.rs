@@ -123,12 +123,13 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     let _ = message.edit(&ctx, |m| {
         m.content("Download complete, extracting new version from downloaded archive.....")
     });
-    trace!("Opening the file.");
+    trace!("Extracting from downloaded archive");
     let tar_gz = File::open(dest)?;
     let tar = flate2::read::GzDecoder::new(tar_gz);
     let mut ar = tar::Archive::new(tar);
     ar.unpack(".")?;
 
+    trace!("Getting and computing the bin hashes");
     let bin_path = Path::new("arzte-bot");
     let hash = blake2b_simd::blake2b(&fs::read(bin_path)?[..]).to_hex();
     let bin_hash_path = Path::new("arzte-bot.blake2");

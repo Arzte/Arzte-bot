@@ -123,6 +123,9 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     response.copy_to(&mut download)?;
 
+    let _ = message.edit(&ctx, |m| {
+        m.content("Download complete, extracting new version from downloaded archive.....")
+    });
     trace!("Opening the file.");
     let tar_gz = File::open(dest)?;
     let tar = flate2::read::GzDecoder::new(tar_gz);

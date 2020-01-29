@@ -222,7 +222,7 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
     };
 
     let string = format!(
-        "Pong! \n**```prolog\n   Message Latency: {}ms, \n     Shard Latency: {}\n```**",
+        "Pong! \n**```prolog\nMessage Latency: {}ms, \n  Shard Latency: {}\n```**",
         timestamp, latency
     );
     message.edit(&ctx, |m| m.content(string))?;

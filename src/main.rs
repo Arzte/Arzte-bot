@@ -71,8 +71,14 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(about, user, avatar, guild, ping, math)]
+#[commands(ping, math)]
+#[description = "A general grouping of commands"]
 struct General;
+
+#[group]
+#[description = "Information commands, they give you information about things"]
+#[commands(about, user, avatar, guild)]
+struct Info;
 
 #[group]
 #[owners_only]

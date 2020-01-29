@@ -24,6 +24,8 @@ use serenity::{
 };
 
 #[command]
+#[description = "Tells you about the bot"]
+#[aliases("version")]
 fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
     let _ = msg.channel_id.say(&ctx.http, format!("{} (v ``{}``) is a small utility bot, developed by <@77812253511913472>, with help from serenity and its resources.", built_info::PKG_NAME, built_info::PKG_VERSION));
     Ok(())

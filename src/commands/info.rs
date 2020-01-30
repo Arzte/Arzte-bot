@@ -204,7 +204,7 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
             }
         };
         match data.get::<ShardManagerContainer>() {
-            Some(v) => v,
+            Some(v) => std::sync::Arc::clone(v),
             None => {
                 let _ = msg.reply(&ctx, "There was a problem getting the shard manager");
 
@@ -213,32 +213,31 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
         }
     };
 
-    let runner = {
-        let runners = {
-            let manager = shard_manager
-                .try_lock()
-                .ok_or("Couldn't get a lock on the shard manager")?;
-            manager
-                .runners
-                .try_lock()
-                .ok_or("Couldn't get a lock on the current shard runner")?
-        };
+    let latency = {
+        let manager = shard_manager
+            .try_lock()
+            .ok_or("Couldn't get a lock on the shard manager")?;
+        let runners = manager
+            .runners
+            .try_lock()
+            .ok_or("Couldn't get a lock on the current shard runner")?;
 
-        match runners.get(&ShardId(ctx.shard_id)) {
+        let shard = match runners.get(&ShardId(ctx.shard_id)) {
             Some(runner) => runner,
             None => {
                 let _ = msg.reply(&ctx, "No shard found");
 
                 return Ok(());
             }
+        };
+
+        match shard.latency {
+            Some(latency) => match Duration::from_std(latency) {
+                Ok(milli) => format!("{}ms", milli.num_milliseconds()),
+                Err(_error) => "result is to high to calculate.".to_string(),
+            },
+            None => "TBD".to_string(),
         }
-    };
-    let latency = match runner.latency {
-        Some(latency) => match Duration::from_std(latency) {
-            Ok(milli) => format!("{}ms", milli.num_milliseconds()),
-            Err(_error) => "result is to high to calculate.".to_string(),
-        },
-        None => "TBD".to_string(),
     };
 
     let string = format!(

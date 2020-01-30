@@ -32,13 +32,23 @@ fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
         client.close(Some(Duration::seconds(2).to_std()?));
     }
 
-    let data = ctx.data.write();
+    let shard_manager = {
+        let data = match ctx.data.try_write() {
+            Some(v) => v,
+            None => {
+                error!("Couldn't get data lock for a graceful shutdown, killing bot");
+                std::process::exit(0)
+            }
+        };
 
-    let shard_manager = match data.get::<ShardManagerContainer>() {
-        Some(v) => v,
-        None => {
-            error!("Couldn't get the shard manager for a graceful shutdown, killing the bot....");
-            std::process::exit(0)
+        match data.get::<ShardManagerContainer>() {
+            Some(v) => std::sync::Arc::clone(v),
+            None => {
+                error!(
+                    "Couldn't get the shard manager for a graceful shutdown, killing the bot...."
+                );
+                std::process::exit(0)
+            }
         }
     };
 
@@ -174,7 +184,7 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
                     }
                 };
                 match data.get::<ShardManagerContainer>() {
-                    Some(v) => v,
+                    Some(v) => std::sync::Arc::clone(v),
                     None => {
                         error!(
                     "Couldn't get the shard manager for a graceful shutdown, killing the bot...."
@@ -185,7 +195,10 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
             };
 
             trace!("Getting a lock on shard_manager");
-            if let Some(mut manager) = shard_manager.try_lock() {
+            // We're assigning this to a variable because of E0597, shard_manager
+            // doesn't last long enough without assigning it to a variable here.
+            let shard_manager_lock = shard_manager.try_lock();
+            if let Some(mut manager) = shard_manager_lock {
                 info!("Telling serenity to close all shards, then shutdown");
                 manager.shutdown_all();
                 Ok(())

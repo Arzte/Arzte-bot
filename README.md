@@ -1,4 +1,5 @@
 Rust bot powered by [serenity](https://github.com/serenity-rs/serenity) ![Rust](https://github.com/Arzte/Arzte-bot/workflows/Rust/badge.svg?branch=master)
+
 Personal/Public bot, currently in early development, with a focus on being a personal bot for `Arzte the Dream Queen#0001` atm.
 
 ## Running arzte

@@ -159,19 +159,28 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         client.close(Some(Duration::seconds(2).to_std()?));
     }
 
-    trace!("Getting serenity's data lock...");
-    let data = ctx.data.write();
-
     if let Err(err) = message
         .edit(&ctx, |m| m.content("Updated! Restarting now!"))
         .and_then(|_t| {
-            let shard_manager = match data.get::<ShardManagerContainer>() {
-                Some(v) => v,
-                None => {
-                    error!(
+            let shard_manager = {
+                trace!("Getting serenity's data lock...");
+                let data = match ctx.data.try_write() {
+                    Some(v) => v,
+                    None => {
+                        error!(
+                            "Couldn't get data lock for a graceful shutdown, killing the bot..."
+                        );
+                        std::process::exit(0);
+                    }
+                };
+                match data.get::<ShardManagerContainer>() {
+                    Some(v) => v,
+                    None => {
+                        error!(
                     "Couldn't get the shard manager for a graceful shutdown, killing the bot...."
                 );
-                    std::process::exit(0);
+                        std::process::exit(0);
+                    }
                 }
             };
 

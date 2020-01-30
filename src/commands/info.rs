@@ -188,31 +188,49 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
     let mut message = msg.channel_id.say(&ctx.http, "Pong!")?;
     let timestamp = message.timestamp.timestamp_millis() - start;
 
-    let data = ctx.data.read();
+    let shard_manager = {
+        let data = match ctx.data.try_read() {
+            Some(v) => v,
+            None => {
+                error!("Error getting data lock, trying again...");
+                match ctx.data.try_read() {
+                    Some(v) => v,
+                    None => {
+                        error!("Can't get data lock");
 
-    let shard_manager = match data.get::<ShardManagerContainer>() {
-        Some(v) => v,
-        None => {
-            let _ = msg.reply(&ctx, "There was a problem getting the shard manager");
+                        return Ok(());
+                    }
+                }
+            }
+        };
+        match data.get::<ShardManagerContainer>() {
+            Some(v) => v,
+            None => {
+                let _ = msg.reply(&ctx, "There was a problem getting the shard manager");
 
-            return Ok(());
+                return Ok(());
+            }
         }
     };
 
-    let manager = shard_manager
-        .try_lock()
-        .ok_or("Couldn't get a lock on the shard manager")?;
-    let runners = manager
-        .runners
-        .try_lock()
-        .ok_or("Couldn't get a lock on the current shard runner")?;
+    let runner = {
+        let runners = {
+            let manager = shard_manager
+                .try_lock()
+                .ok_or("Couldn't get a lock on the shard manager")?;
+            manager
+                .runners
+                .try_lock()
+                .ok_or("Couldn't get a lock on the current shard runner")?
+        };
 
-    let runner = match runners.get(&ShardId(ctx.shard_id)) {
-        Some(runner) => runner,
-        None => {
-            let _ = msg.reply(&ctx, "No shard found");
+        match runners.get(&ShardId(ctx.shard_id)) {
+            Some(runner) => runner,
+            None => {
+                let _ = msg.reply(&ctx, "No shard found");
 
-            return Ok(());
+                return Ok(());
+            }
         }
     };
     let latency = match runner.latency {

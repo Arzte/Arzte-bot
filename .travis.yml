@@ -12,10 +12,6 @@ env:
     - RUST_BACKTRACE=1
 
 jobs:
-  allow_failures:
-    # Not building on stable due to nightly features, however it's a nice to have
-    # - rust: stable
-    - name: cargo clippy
   fast_finish: true
   include:
     - stage: Github Release

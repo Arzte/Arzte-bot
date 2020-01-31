@@ -1,6 +1,6 @@
 [package]
 name = "arzte"
-version = "0.9.19"
+version = "0.9.20"
 authors = ["Iris Hoffmeyer <hoffmeyer25@gmail.com>"]
 publish = false
 build = "build.rs"

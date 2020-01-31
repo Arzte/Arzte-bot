@@ -71,14 +71,15 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                     .field("Discriminator", format!("#{:04}", user.discriminator), true)
                     .field("User ID", user.id, true)
                     .field("Nickname", nickname, true)
-                    .field(
-                        "User Created",
+                    .field("Joined Server", member_joined, true);
+                e.footer(|f| {
+                    f.text(format!(
+                        "User Joined on {}",
                         user.created_at()
                             .format("%a, %d %h %Y @ %H:%M:%S")
-                            .to_string(),
-                        true,
-                    )
-                    .field("Joined Server", member_joined, true)
+                            .to_string()
+                    ))
+                })
             })
         })
         .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))

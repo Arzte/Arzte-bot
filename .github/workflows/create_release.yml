@@ -2,7 +2,7 @@ on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
-    - '*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "*"
 
 name: Upload Release Asset
 
@@ -27,9 +27,15 @@ jobs:
           command: build
           args: --release
 
+      - name: Install blake2 for checksum
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: --force blake2_bin
+
       - name: Create archive
         run: |
-         sh ci/before_deploy.sh
+          sh ci/before_deploy.sh
 
       - name: Create Release
         id: create_release
@@ -43,12 +49,12 @@ jobs:
           prerelease: false
 
       - name: Upload Release Asset
-        id: upload-release-asset 
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
           asset_path: ./arzte.tar.gz
           asset_name: arzte.tar.gz
           asset_content_type: application/gzip

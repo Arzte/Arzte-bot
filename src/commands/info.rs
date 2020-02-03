@@ -69,6 +69,16 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     };
 
     let user = member.user.read();
+    let roles = member.roles(&ctx).map_or(
+        "No role data found for this user in the cache".to_owned(),
+        |m| {
+            let mut role_id_list = String::new();
+            for role in m {
+                role_id_list.push_str(format!("<@&{}>\n", role.id.as_u64()).as_ref())
+            }
+            role_id_list
+        },
+    );
     let nickname = member.nick.map_or("None".to_owned(), |nick| nick);
     let member_joined = member.joined_at.map_or("Unavailable".to_owned(), |d| {
         d.format("%a, %d %h %Y @ %H:%M:%S").to_string()
@@ -77,14 +87,20 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     msg.channel_id
         .send_message(&ctx, move |m| {
             m.embed(move |e| {
-                e.author(|a| a.name(&user.name).icon_url(&user.face()))
-                    .field("Discriminator", format!("#{:04}", user.discriminator), true)
-                    .field("User ID", user.id, true)
-                    .field("Nickname", nickname, true)
-                    .field("Joined Server", member_joined, true);
+                e.author(|a| a.name(&user.name));
+                e.thumbnail(&user.face());
+                e.field("Discriminator", format!("#{:04}", user.discriminator), true);
+                e.field("User ID", user.id, true);
+                e.field("Nickname", nickname, true);
+                e.field("Profile", format!("<@{}>", user.id), true);
+                e.field("Joined Server", member_joined, true);
+                e.field("Roles", roles, true);
+                if user.bot {
+                    e.field("Bot Account", user.bot, true);
+                }
                 e.footer(|f| {
                     f.text(format!(
-                        "Joined Discord on {}",
+                        "Requested {}",
                         user.created_at()
                             .format("%a, %d %h %Y @ %H:%M:%S")
                             .to_string()

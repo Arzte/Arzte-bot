@@ -74,7 +74,7 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                     .field("Joined Server", member_joined, true);
                 e.footer(|f| {
                     f.text(format!(
-                        "User Joined on {}",
+                        "Joined Discord on {}",
                         user.created_at()
                             .format("%a, %d %h %Y @ %H:%M:%S")
                             .to_string()

@@ -44,6 +44,7 @@ fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
 #[command]
 #[description = "Shows various information about a user"]
 #[only_in("guilds")]
+#[aliases("u")]
 fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let guild_id = msg.guild_id.ok_or("Failed to get GuildID from Message.")?;
     let member = if msg.mentions.is_empty() {
@@ -98,13 +99,10 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                 if user.bot {
                     e.field("Bot Account", user.bot, true);
                 }
+                e.timestamp(msg.timestamp.to_rfc3339());
                 e.footer(|f| {
-                    f.text(format!(
-                        "Requested {}",
-                        user.created_at()
-                            .format("%a, %d %h %Y @ %H:%M:%S")
-                            .to_string()
-                    ))
+                    f.text(format!("Requested by {}", msg.author.tag()));
+                    f.icon_url(msg.author.face())
                 })
             })
         })

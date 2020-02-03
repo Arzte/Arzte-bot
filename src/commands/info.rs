@@ -18,6 +18,7 @@ use serenity::{
     },
     model::{
         id::GuildId,
+        id::UserId,
         prelude::Message,
     },
     prelude::Context,
@@ -25,9 +26,18 @@ use serenity::{
 
 #[command]
 #[description = "Tells you about the bot"]
-#[aliases("version")]
+#[aliases("version", "v")]
 fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let _ = msg.channel_id.say(&ctx.http, format!("{} (v ``{}``) is a small utility bot, developed by <@77812253511913472>, with help from serenity and its resources.", built_info::PKG_NAME, built_info::PKG_VERSION));
+    let bot_owner = UserId(77_812_253_511_913_472).to_user(&ctx)?;
+    let _ = msg.channel_id.say(
+        &ctx.http,
+        format!(
+            "{} {}, developed by {}, with help from serenity and its resources.",
+            built_info::PKG_NAME,
+            built_info::PKG_VERSION,
+            bot_owner.name
+        ),
+    );
     Ok(())
 }
 

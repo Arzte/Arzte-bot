@@ -102,8 +102,10 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                 e.timestamp(msg.timestamp.to_rfc3339());
                 e.footer(|f| {
                     f.text(format!("Requested by {}", msg.author.tag()));
-                    f.icon_url(msg.author.face())
-                })
+                    f.icon_url(msg.author.face());
+                    f
+                });
+                e
             })
         })
         .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))

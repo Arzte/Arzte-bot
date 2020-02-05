@@ -47,6 +47,7 @@ fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
 #[aliases("u")]
 fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let guild_id = msg.guild_id.ok_or("Failed to get GuildID from Message.")?;
+    // TODO: Find a user via userid if provided
     let member = if msg.mentions.is_empty() {
         if args.is_empty() {
             msg.member(&ctx).ok_or("Could not find member.")?
@@ -213,7 +214,14 @@ fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
     let start = chrono::offset::Utc::now().timestamp_millis();
     let mut message = msg.channel_id.say(&ctx.http, "Pong!")?;
-    let timestamp = message.timestamp.timestamp_millis() - start;
+    let message_latency = {
+        let millis = message.timestamp.timestamp_millis();
+        if millis > 0 {
+            millis - start
+        } else {
+            0
+        }
+    };
 
     let shard_manager = {
         let data = match ctx.data.try_read() {
@@ -269,7 +277,7 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     let string = format!(
         "Pong! \n**```prolog\nMessage Latency: {}ms, \n  Shard Latency: {}\n```**",
-        timestamp, latency
+        message_latency, latency
     );
     message.edit(&ctx, |m| m.content(string))?;
 

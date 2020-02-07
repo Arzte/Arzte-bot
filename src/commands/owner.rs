@@ -25,6 +25,7 @@ use std::{
 
 #[command]
 #[description = "Quit's this instance of the bot, only available to bot owners"]
+#[aliases("q")]
 fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
     msg.reply(&ctx, "Shutting down!")?;
 
@@ -71,6 +72,7 @@ use crate::core::{
 
 #[command]
 #[description = "Downloads the latest version of the bot if available, only available to bot owners"]
+#[aliases("u")]
 fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     let reqwest = reqwest::blocking::ClientBuilder::new()
         .user_agent(format!(

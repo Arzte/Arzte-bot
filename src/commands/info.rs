@@ -42,6 +42,42 @@ fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
+#[description = "Shows the avatar for the user or specified user."]
+fn avatar(context: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    let face = if msg.mentions.is_empty() {
+        if args.is_empty() {
+            msg.author.face()
+        } else {
+            let result: Result<String, Box<dyn std::error::Error>> = try {
+                msg.guild_id
+                    .ok_or("Failed to get GuildId from Message")?
+                    .to_guild_cached(&context)
+                    .ok_or("Failed to get Guild from GuildId")?
+                    .read()
+                    .members_starting_with(args.rest(), false, true)
+                    .first()
+                    .ok_or("Could not find member")?
+                    .user_id()
+                    .to_user(&context)?
+                    .face()
+            };
+            match result {
+                Ok(face) => face,
+                Err(e) => {
+                    error!("While searching for user: {}", e);
+                    msg.author.face()
+                }
+            }
+        }
+    } else {
+        msg.mentions[0].face()
+    };
+    msg.channel_id
+        .send_message(&context, |m| m.embed(|e| e.image(face)))
+        .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
+}
+
+#[command]
 #[description = "Shows various information about a user"]
 #[only_in("guilds")]
 #[aliases("u")]
@@ -113,45 +149,10 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
-#[description = "Shows the avatar for the user or specified user."]
-fn avatar(context: &mut Context, msg: &Message, args: Args) -> CommandResult {
-    let face = if msg.mentions.is_empty() {
-        if args.is_empty() {
-            msg.author.face()
-        } else {
-            let result: Result<String, Box<dyn std::error::Error>> = try {
-                msg.guild_id
-                    .ok_or("Failed to get GuildId from Message")?
-                    .to_guild_cached(&context)
-                    .ok_or("Failed to get Guild from GuildId")?
-                    .read()
-                    .members_starting_with(args.rest(), false, true)
-                    .first()
-                    .ok_or("Could not find member")?
-                    .user_id()
-                    .to_user(&context)?
-                    .face()
-            };
-            match result {
-                Ok(face) => face,
-                Err(e) => {
-                    error!("While searching for user: {}", e);
-                    msg.author.face()
-                }
-            }
-        }
-    } else {
-        msg.mentions[0].face()
-    };
-    msg.channel_id
-        .send_message(&context, |m| m.embed(|e| e.image(face)))
-        .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
-}
-
-#[command]
 #[description = "Shows various information about a guild."]
 #[only_in("guilds")]
-fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+#[aliases("g", "s", "guild")]
+fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let guild_id = if !args.is_empty() {
         GuildId(args.single::<u64>()?)
     } else if let Some(gid) = msg.guild_id {
@@ -168,42 +169,82 @@ fn guild(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         .ok_or("Failed to get Guild from GuildID")?
         .read()
         .clone();
+    let roles: String = {
+        let role_hash = &guild.roles;
+        let mut role_id_list = String::new();
+        let mut role_vec: Vec<_> = role_hash
+            .iter()
+            .filter(|(_role_id, role)| !role.managed)
+            .collect();
+        // This sorts the vector by position, in reverse order. (so @@everyone is the last item)
+        role_vec.sort_unstable_by(|(_role_id_a, role_a), (_role_id_b, role_b)| {
+            role_a
+                .position
+                .partial_cmp(&role_b.position)
+                .unwrap()
+                .reverse()
+        });
+        if role_vec.len() < 15 {
+            for (role_id, _role) in role_vec.iter() {
+                role_id_list.push_str(format!("<@&{}>\n", role_id.as_u64()).as_ref())
+            }
+        } else {
+            // Take will panic if there isn't as many items in a iter as
+            // the number you try to take, therefore it can only be done when the
+            // the items we're itering over is known to be equal to or above the amount
+            // we're trying to take
+            for (role_id, _role) in role_vec.iter().take(15) {
+                role_id_list.push_str(format!("<@&{}>\n", role_id.as_u64()).as_ref())
+            }
+            role_id_list.push_str("*Unable to show all roles.*");
+        }
+        role_id_list
+    };
 
     msg.channel_id
         .send_message(&ctx, move |m| {
             m.embed(move |e| {
-                e.author(|a| {
-                    a.name(&guild.name);
-                    if let Some(guild_icon) = &guild.icon_url() {
-                        a.icon_url(guild_icon);
-                    }
-                    a
-                })
-                .field("Owner", format!("<@{}>", &guild.owner_id.as_u64()), true)
-                .field("Guild ID", format!("{}", guild_id), true)
-                .field("Members", guild.member_count, true)
-                .field("Region", &guild.region, true)
-                .field("Roles", &guild.roles.len(), true)
-                .field("Emojis", &guild.emojis.len(), true)
-                .field("Features", format!("{:?}", guild.features), true)
-                .field(
+                e.author(|a| a.name(&guild.name));
+                if let Some(guild_icon) = &guild.icon_url() {
+                    e.thumbnail(guild_icon);
+                };
+                e.field("Owner", format!("<@{}>", &guild.owner_id.as_u64()), true);
+                e.field("Guild ID", format!("{}", guild_id), true);
+                e.field("Members", guild.member_count, true);
+                e.field("Roles", roles, true);
+                e.field(
+                    "Guild created on",
+                    guild_id
+                        .created_at()
+                        .format("%A, %d %B %Y \n%H:%M:%S UTC")
+                        .to_string(),
+                    true,
+                );
+                e.field("Region", &guild.region, true);
+                e.field("Emojis", &guild.emojis.len(), true);
+                e.field("Channels", guild.channels.len(), true);
+                if !guild.features.is_empty() {
+                    e.field("Features", guild.features.join(", "), true);
+                }
+                e.field(
                     "Nitro Boost Level",
                     format!("{:?}", guild.premium_tier),
                     true,
-                )
-                .field("Nitro Boosts", guild.premium_subscription_count, true);
+                );
+                e.field("Nitro Boosts", guild.premium_subscription_count, true);
                 if let Some(splash) = guild.splash_url() {
                     e.image(splash);
                 }
+                if let Some(description) = guild.description {
+                    e.description(description);
+                }
+                e.timestamp(msg.timestamp.to_rfc3339());
                 e.footer(|f| {
-                    f.text(format!(
-                        "Guild created on {}",
-                        guild_id
-                            .created_at()
-                            .format("%a, %d %h %Y @ %H:%M:%S")
-                            .to_string()
-                    ))
-                })
+                    f.text(format!("Requested by {}", msg.author.tag()));
+                    f.icon_url(msg.author.face());
+                    f
+                });
+                e
             })
         })
         .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))

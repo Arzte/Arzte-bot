@@ -77,7 +77,7 @@ struct General;
 
 #[group]
 #[description = "Information commands, they give you information about things"]
-#[commands(about, user, avatar, guild)]
+#[commands(about, user, avatar, server)]
 struct Info;
 
 #[group]

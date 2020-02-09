@@ -76,6 +76,7 @@ impl EventHandler for Handler {
             return;
         }
         let reaction = add_reaction.clone();
+        info!("Reaction: \n{:?}", reaction.emoji);
         let guild_lock = {
             match reaction.channel(&ctx).unwrap().guild() {
                 Some(guild_channel) => match guild_channel.read().guild(&ctx) {
@@ -114,8 +115,6 @@ impl EventHandler for Handler {
                 info!("{:?}", v);
             }
         }
-
-        // info!("Reaction: \n{:?}", reaction.emoji);
     }
 }
 

@@ -72,19 +72,17 @@ impl EventHandler for Handler {
     fn reaction_add(&self, ctx: Context, add_reaction: Reaction) {
         // Temporarly limit to one server
         // TODO: Generize this so it can work in other servers
-        if add_reaction.channel_id.as_u64() != &675_885_303_525_015_582 {
+        if add_reaction.channel_id.as_u64() != &355_889_026_726_887_426 {
             return;
         }
         let reaction = add_reaction.clone();
         let guild_lock = {
-            if let Some(guild_channel) = reaction.channel(&ctx).unwrap().guild() {
-                let rw_lock = match guild_channel.read().guild(&ctx) {
+            match reaction.channel(&ctx).unwrap().guild() {
+                Some(guild_channel) => match guild_channel.read().guild(&ctx) {
                     Some(v) => v,
                     None => return,
-                };
-                rw_lock
-            } else {
-                return;
+                },
+                None => return,
             }
         };
         let guild = guild_lock.read();
@@ -100,13 +98,23 @@ impl EventHandler for Handler {
         };
 
         match emoji_name.as_ref() {
-            "pick" => {
-                let _ = guild_member.add_role(&ctx, 675944554989486105);
+            "⛏\u{fe0f}" => match guild_member.add_role(&ctx, 675_944_444_868_034_613) {
+                Ok(_v) => return,
+                Err(e) => {
+                    warn!("Unable to give role: {:?}", e);
+                    return;
+                }
+            },
+            "🎞\u{fe0f}" => match guild_member.add_role(&ctx, 675_944_444_868_034_613) {
+                Ok(_v) => return,
+                Err(e) => {
+                    warn!("Unable to give role: {:?}", e);
+                    return;
+                }
+            },
+            v => {
+                info!("{:?}", v);
             }
-            "film_frame" => {
-                let _ = guild_member.add_role(&ctx, 675944444868034613);
-            }
-            _ => {}
         }
 
         // info!("Reaction: \n{:?}", reaction.emoji);

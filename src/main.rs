@@ -99,17 +99,15 @@ impl EventHandler for Handler {
 
         match emoji_name.as_ref() {
             "⛏\u{fe0f}" => match guild_member.add_role(&ctx, 675_944_554_989_486_105) {
-                Ok(_v) => return,
+                Ok(_v) => {}
                 Err(e) => {
                     warn!("Unable to give role: {:?}", e);
-                    return;
                 }
             },
             "🎞\u{fe0f}" => match guild_member.add_role(&ctx, 675_944_444_868_034_613) {
-                Ok(_v) => return,
+                Ok(_v) => {}
                 Err(e) => {
                     warn!("Unable to give role: {:?}", e);
-                    return;
                 }
             },
             v => {

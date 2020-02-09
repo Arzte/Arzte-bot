@@ -68,6 +68,49 @@ impl EventHandler for Handler {
     fn resume(&self, _: Context, _: ResumedEvent) {
         info!("Resumed");
     }
+
+    fn reaction_add(&self, ctx: Context, add_reaction: Reaction) {
+        // Temporarly limit to one server
+        // TODO: Generize this so it can work in other servers
+        if add_reaction.channel_id.as_u64() != &675_885_303_525_015_582 {
+            return;
+        }
+        let reaction = add_reaction.clone();
+        let guild_lock = {
+            if let Some(guild_channel) = reaction.channel(&ctx).unwrap().guild() {
+                let rw_lock = match guild_channel.read().guild(&ctx) {
+                    Some(v) => v,
+                    None => return,
+                };
+                rw_lock
+            } else {
+                return;
+            }
+        };
+        let guild = guild_lock.read();
+
+        let mut guild_member = guild.member(&ctx, reaction.user_id).unwrap();
+
+        let emoji_name = {
+            match add_reaction.emoji {
+                ReactionType::Custom { name, .. } => name.unwrap(),
+                ReactionType::Unicode(name) => name,
+                _ => "".to_owned(),
+            }
+        };
+
+        match emoji_name.as_ref() {
+            "pick" => {
+                let _ = guild_member.add_role(&ctx, 675944554989486105);
+            }
+            "film_frame" => {
+                let _ = guild_member.add_role(&ctx, 675944444868034613);
+            }
+            _ => {}
+        }
+
+        // info!("Reaction: \n{:?}", reaction.emoji);
+    }
 }
 
 #[group]

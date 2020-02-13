@@ -108,7 +108,7 @@ impl EventHandler for Handler {
                     warn!("Unable to give role: {:?}", error);
                 }
             }
-            "🔔\u{fe0f}" => {
+            "🔔" => {
                 if let Err(error) = guild_member.add_role(&ctx, 677_524_235_463_426_051) {
                     warn!("Unable to give role: {:?}", error);
                 }

@@ -72,11 +72,10 @@ impl EventHandler for Handler {
     fn reaction_add(&self, ctx: Context, add_reaction: Reaction) {
         // Temporarly limit to one server
         // TODO: Generize this so it can work in other servers
-        if add_reaction.channel_id.as_u64() != &355_889_026_726_887_426 {
+        if add_reaction.channel_id.as_u64() != &675_885_303_525_015_582 {
             return;
         }
         let reaction = add_reaction.clone();
-        info!("Reaction: \n{:?}", reaction.emoji);
         let guild_lock = {
             match reaction.channel(&ctx).unwrap().guild() {
                 Some(guild_channel) => match guild_channel.read().guild(&ctx) {
@@ -99,20 +98,23 @@ impl EventHandler for Handler {
         };
 
         match emoji_name.as_ref() {
-            "⛏\u{fe0f}" => match guild_member.add_role(&ctx, 675_944_554_989_486_105) {
-                Ok(_v) => {}
-                Err(e) => {
-                    warn!("Unable to give role: {:?}", e);
+            "⛏\u{fe0f}" => {
+                if let Err(error) = guild_member.add_role(&ctx, 675_944_554_989_486_105) {
+                    warn!("Unable to give role: {:?}", error);
                 }
-            },
-            "🎞\u{fe0f}" => match guild_member.add_role(&ctx, 675_944_444_868_034_613) {
-                Ok(_v) => {}
-                Err(e) => {
-                    warn!("Unable to give role: {:?}", e);
+            }
+            "🎞\u{fe0f}" => {
+                if let Err(error) = guild_member.add_role(&ctx, 675_944_444_868_034_613) {
+                    warn!("Unable to give role: {:?}", error);
                 }
-            },
+            }
+            "🔔\u{fe0f}" => {
+                if let Err(error) = guild_member.add_role(&ctx, 677_524_235_463_426_051) {
+                    warn!("Unable to give role: {:?}", error);
+                }
+            }
             v => {
-                info!("{:?}", v);
+                log::debug!("{:?}", v);
             }
         }
     }

@@ -265,32 +265,32 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
         }
     };
 
-    let shard_manager = {
-        let data = match ctx.data.try_read() {
-            Some(v) => v,
-            None => {
-                error!("Error getting data lock, trying again...");
-                match ctx.data.try_read() {
-                    Some(v) => v,
-                    None => {
-                        error!("Can't get data lock");
+    let latency = {
+        let shard_manager = {
+            let data = match ctx.data.try_read() {
+                Some(v) => v,
+                None => {
+                    error!("Error getting data lock, trying again...");
+                    match ctx.data.try_read() {
+                        Some(v) => v,
+                        None => {
+                            error!("Can't get data lock");
 
-                        return Ok(());
+                            return Ok(());
+                        }
                     }
+                }
+            };
+            match data.get::<ShardManagerContainer>() {
+                Some(v) => std::sync::Arc::clone(v),
+                None => {
+                    let _ = msg.reply(&ctx, "There was a problem getting the shard manager");
+
+                    return Ok(());
                 }
             }
         };
-        match data.get::<ShardManagerContainer>() {
-            Some(v) => std::sync::Arc::clone(v),
-            None => {
-                let _ = msg.reply(&ctx, "There was a problem getting the shard manager");
 
-                return Ok(());
-            }
-        }
-    };
-
-    let latency = {
         let manager = shard_manager
             .try_lock()
             .ok_or("Couldn't get a lock on the shard manager")?;

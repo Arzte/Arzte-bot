@@ -252,13 +252,14 @@ fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 
 #[command]
 #[description = "Does a quick test to find out the latancy of Discord Relative to the bot"]
+#[aliases("p")]
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
     let start = chrono::offset::Utc::now().timestamp_millis();
     let mut message = msg.channel_id.say(&ctx.http, "Pong!")?;
     let message_latency = {
-        let millis = message.timestamp.timestamp_millis();
+        let millis = message.timestamp.timestamp_millis() - start;
         if millis > 0 {
-            millis - start
+            millis
         } else {
             0
         }

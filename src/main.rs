@@ -1,6 +1,6 @@
 #![recursion_limit = "128"]
 #![allow(proc_macro_derive_resolution_fallback)]
-#![feature(try_blocks)]
+#![feature(try_blocks, nll)]
 
 mod commands;
 pub mod core;

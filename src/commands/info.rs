@@ -166,7 +166,7 @@ fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     };
     let guild = guild_id
         .to_guild_cached(&ctx)
-        .ok_or("Failed to get Guild from GuildID")?
+        .ok_or("No server with this Guild ID can be found")?
         .read()
         .clone();
     let roles: String = {
@@ -186,15 +186,15 @@ fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         });
         if role_vec.len() < 15 {
             for (role_id, _role) in role_vec.iter() {
-                role_id_list.push_str(format!("<@&{}>\n", role_id.as_u64()).as_ref())
+                role_id_list.push_str(format!("<@&{}> ", role_id.as_u64()).as_ref())
             }
         } else {
             // Take will panic if there isn't as many items in a iter as
             // the number you try to take, therefore it can only be done when the
             // the items we're itering over is known to be equal to or above the amount
             // we're trying to take
-            for (role_id, _role) in role_vec.iter().take(15) {
-                role_id_list.push_str(format!("<@&{}>\n", role_id.as_u64()).as_ref())
+            for (role_id, _role) in role_vec.iter().take(40) {
+                role_id_list.push_str(format!("<@&{}> ", role_id.as_u64()).as_ref())
             }
             role_id_list.push_str("*Unable to show all roles.*");
         }
@@ -211,7 +211,6 @@ fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                 e.field("Owner", format!("<@{}>", &guild.owner_id.as_u64()), true);
                 e.field("Guild ID", format!("{}", guild_id), true);
                 e.field("Members", guild.member_count, true);
-                e.field("Roles", roles, true);
                 e.field(
                     "Guild created on",
                     guild_id
@@ -232,6 +231,7 @@ fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                     true,
                 );
                 e.field("Nitro Boosts", guild.premium_subscription_count, true);
+                e.field("Roles", roles, false);
                 if let Some(splash) = guild.splash_url() {
                     e.image(splash);
                 }

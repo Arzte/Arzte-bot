@@ -184,7 +184,7 @@ fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                 .unwrap()
                 .reverse()
         });
-        if role_vec.len() < 15 {
+        if role_vec.len() < 60 {
             for (role_id, _role) in role_vec.iter() {
                 role_id_list.push_str(format!("<@&{}> ", role_id.as_u64()).as_ref())
             }
@@ -193,7 +193,7 @@ fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
             // the number you try to take, therefore it can only be done when the
             // the items we're itering over is known to be equal to or above the amount
             // we're trying to take
-            for (role_id, _role) in role_vec.iter().take(40) {
+            for (role_id, _role) in role_vec.iter().take(60) {
                 role_id_list.push_str(format!("<@&{}> ", role_id.as_u64()).as_ref())
             }
             role_id_list.push_str("*Unable to show all roles.*");

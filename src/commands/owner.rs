@@ -72,7 +72,7 @@ use crate::core::{
 
 #[command]
 #[description = "Downloads the latest version of the bot if available, only available to bot owners"]
-#[aliases("u")]
+#[aliases("up")]
 fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     let reqwest = reqwest::blocking::ClientBuilder::new()
         .user_agent(format!(

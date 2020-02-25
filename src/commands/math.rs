@@ -48,39 +48,29 @@ fn math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 /// For when math isn't precise enough for you. (15 second timeout on calculations)
 fn precision_math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let args_full = args.rest();
-    if args_full.contains("for") {
-        return msg
-            .channel_id
-            .say(&ctx.http, "Illegal Character ``for``")
-            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+
+    let value: &str = if args_full.contains("for") {
+        "Illegal Character ``for``"
     } else if args_full.contains("print") {
-        return msg
-            .channel_id
-            .say(&ctx.http, "Illegal Character ``print``")
-            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+        "Illegal Character ``print``"
     } else if args_full.contains("warrenty") {
-        return msg
-            .channel_id
-            .say(&ctx.http, "Illegal Character ``warrenty``")
-            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+        "Illegal Character ``warrenty``"
     } else if args_full.contains("while") {
-        return msg
-            .channel_id
-            .say(&ctx.http, "Illegal Character ``while``")
-            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
-    }
+        "Illegal Character ``while``"
+    } else {
+        match bc::bc_timeout!(args_full) {
+            Ok(value) => {
+                if value.len() < 2000 {
+                    value.as_ref()
+                } else {
+                    "Output too large to send"
+                }
+            }
+            Err(err) => format!("```{:?}```", err).as_ref(),
+        }
+    };
 
-    let value = bc::bc_timeout!(args_full);
-
-    match value {
-        Ok(value) => msg
-            .channel_id
-            .say(&ctx.http, value)
-            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
-
-        Err(err) => msg
-            .channel_id
-            .say(&ctx.http, format!("```{:?}```", err))
-            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
-    }
+    msg.channel_id
+        .say(&ctx.http, value)
+        .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
 }

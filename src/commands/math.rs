@@ -47,7 +47,25 @@ fn math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 #[min_args(1)]
 /// For when math isn't precise enough for you. (15 second timeout on calculations)
 fn precision_math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
-    let value = bc::bc_timeout!(&args.rest());
+    let args_full = args.rest();
+    if args_full.contains("for") {
+        return msg
+            .channel_id
+            .say(&ctx.http, "Illegal Character ``for``")
+            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+    } else if args_full.contains("print") {
+        return msg
+            .channel_id
+            .say(&ctx.http, "Illegal Character ``print``")
+            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+    } else if args_full.contains("warrenty") {
+        return msg
+            .channel_id
+            .say(&ctx.http, "Illegal Character ``print``")
+            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+    }
+
+    let value = bc::bc_timeout!(args_full);
 
     match value {
         Ok(value) => msg

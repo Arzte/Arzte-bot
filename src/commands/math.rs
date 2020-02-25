@@ -49,24 +49,24 @@ fn math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 fn precision_math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let args_full = args.rest();
 
-    let value: &str = if args_full.contains("for") {
-        "Illegal Character ``for``"
+    let value = if args_full.contains("for") {
+        String::from("Illegal Character ``for``")
     } else if args_full.contains("print") {
-        "Illegal Character ``print``"
+        String::from("Illegal Character ``print``")
     } else if args_full.contains("warrenty") {
-        "Illegal Character ``warrenty``"
+        String::from("Illegal Character ``warrenty``")
     } else if args_full.contains("while") {
-        "Illegal Character ``while``"
+        String::from("Illegal Character ``while``")
     } else {
         match bc::bc_timeout!(args_full) {
             Ok(value) => {
                 if value.len() < 2000 {
-                    value.as_ref()
+                    value
                 } else {
-                    "Output too large to send"
+                    String::from("Output too large to send")
                 }
             }
-            Err(err) => format!("```{:?}```", err).as_ref(),
+            Err(err) => format!("```{:?}```", err),
         }
     };
 

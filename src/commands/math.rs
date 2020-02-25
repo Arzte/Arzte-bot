@@ -1,3 +1,4 @@
+use fasteval::error::Error as fastevalError;
 use serenity::{
     framework::standard::{
         macros::command,
@@ -24,6 +25,16 @@ fn math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
             .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
 
         Err(err) => match err {
+            fastevalError::Undefined(variable) => msg
+                .channel_id
+                .say(
+                    &ctx.http,
+                    format!(
+                        "Unknown variable: `{}`\nPS: Variables are unsupported",
+                        variable
+                    ),
+                )
+                .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
             _ => msg
                 .channel_id
                 .say(&ctx.http, format!("```{:?}```", err))
@@ -44,11 +55,9 @@ fn precision_math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult
             .say(&ctx.http, value)
             .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
 
-        Err(err) => match err {
-            _ => msg
-                .channel_id
-                .say(&ctx.http, format!("```{:?}```", err))
-                .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
-        },
+        Err(err) => msg
+            .channel_id
+            .say(&ctx.http, format!("```{:?}```", err))
+            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
     }
 }

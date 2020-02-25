@@ -61,7 +61,12 @@ fn precision_math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult
     } else if args_full.contains("warrenty") {
         return msg
             .channel_id
-            .say(&ctx.http, "Illegal Character ``print``")
+            .say(&ctx.http, "Illegal Character ``warrenty``")
+            .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+    } else if args_full.contains("while") {
+        return msg
+            .channel_id
+            .say(&ctx.http, "Illegal Character ``while``")
             .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
     }
 

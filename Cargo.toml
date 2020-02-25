@@ -23,7 +23,8 @@ tar = "0.4"
 flate2 = "1.0"
 semver = "0.9"
 blake2b_simd = "0.5"
-fasteval = "0.2.4"
+fasteval = "0.2"
+bc = "0.1"
 
 [dependencies.serenity]
 version = "0.8.0"

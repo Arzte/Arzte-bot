@@ -121,19 +121,19 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping, math)]
-#[description = "A general grouping of commands"]
+#[commands(ping, math, precision_math)]
+/// A general grouping of commands
 struct General;
 
 #[group]
-#[description = "Information commands, they give you information about things"]
 #[commands(about, user, avatar, server)]
+/// Information commands, they give you information about things
 struct Info;
 
 #[group]
 #[owners_only]
-#[description = "Commands that can only be ran by the owner of the bot"]
 #[commands(quit, update)]
+/// Commands that can only be ran by the owner of the bot
 struct Owners;
 
 #[help]

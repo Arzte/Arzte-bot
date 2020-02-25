@@ -25,8 +25,8 @@ use serenity::{
 };
 
 #[command]
-#[description = "Tells you about the bot"]
 #[aliases("version", "v")]
+/// Tells some information about the bot
 fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
     let bot_owner = UserId(77_812_253_511_913_472).to_user(&ctx)?;
     let _ = msg.channel_id.say(
@@ -42,7 +42,7 @@ fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-#[description = "Shows the avatar for the user or specified user."]
+/// Shows the avatar for the user or specified user.
 fn avatar(context: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let face = if msg.mentions.is_empty() {
         if args.is_empty() {
@@ -78,9 +78,9 @@ fn avatar(context: &mut Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
-#[description = "Shows various information about a user"]
 #[only_in("guilds")]
 #[aliases("u")]
+/// Shows various information about a user
 fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let guild_id = msg.guild_id.ok_or("Failed to get GuildID from Message.")?;
     // TODO: Find a user via userid if provided
@@ -149,9 +149,9 @@ fn user(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
-#[description = "Shows various information about a guild."]
 #[only_in("guilds")]
 #[aliases("g", "s", "guild")]
+/// Shows various information about a guild.
 fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let guild_id = if !args.is_empty() {
         GuildId(args.single::<u64>()?)
@@ -251,8 +251,8 @@ fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 }
 
 #[command]
-#[description = "Does a quick test to find out the latancy of Discord Relative to the bot"]
 #[aliases("p")]
+/// Does a quick test to find out the latancy of Discord Relative to the bot
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
     let start = chrono::offset::Utc::now().timestamp_millis();
     let mut message = msg.channel_id.say(&ctx.http, "Pong!")?;

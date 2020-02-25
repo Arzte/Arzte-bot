@@ -46,6 +46,7 @@ checksum = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
 name = "arzte"
 version = "0.9.31"
 dependencies = [
+ "bc",
  "blake2b_simd",
  "built",
  "chrono",
@@ -125,6 +126,15 @@ name = "base64"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
+
+[[package]]
+name = "bc"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f4b9276b102dc7622c5aac5f66ad1cf6a958172b68785198f1c6a2da83124e2"
+dependencies = [
+ "subprocess",
+]
 
 [[package]]
 name = "bitflags"
@@ -2027,6 +2037,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d24114bfcceb867ca7f71a0d3fe45d45619ec47a6fbfa98cb14e14250bfa5d6d"
 dependencies = [
  "bytes 0.4.12",
+]
+
+[[package]]
+name = "subprocess"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5109e3c3215ce5339ca9766a6db7f39144ccc7d9bad53b96d65cfb14ae6c2985"
+dependencies = [
+ "libc",
+ "winapi 0.3.8",
 ]
 
 [[package]]

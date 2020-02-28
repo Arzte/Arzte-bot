@@ -23,6 +23,10 @@ tar = "0.4"
 flate2 = "1.0"
 semver = "0.9"
 blake2b_simd = "0.5"
+sqlx = { version = "0.2", default-features = false, features = [ "runtime-tokio", "macros", "postgres" ] }
+tokio = { version = "0.2" }
+tokio-util = { version = "0.2" }
+dotenv = "0.15"
 fasteval = "0.2"
 bc = "0.1"
 

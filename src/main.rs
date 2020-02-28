@@ -41,22 +41,31 @@ use serenity::{
     },
 };
 use std::{
-    collections::HashSet,
+    collections::{
+        HashMap,
+        HashSet,
+    },
     sync::Arc,
     sync::Mutex,
 };
 
 use crate::{
     commands::{
+        admin::*,
         info::*,
         math::*,
         owner::*,
     },
     core::structs::{
+        PoolContainer,
+        PrefixHashMapContainer,
         SettingsContainer,
         ShardManagerContainer,
+        TokioContainer,
     },
 };
+
+use sqlx::PgPool;
 
 struct Handler;
 
@@ -132,7 +141,7 @@ struct Info;
 
 #[group]
 #[owners_only]
-#[commands(quit, update)]
+#[commands(quit, update, prefix)]
 /// Commands that can only be ran by the owner of the bot
 struct Owners;
 
@@ -152,7 +161,58 @@ fn my_help(
     help_commands::plain(context, msg, args, &help_options, groups, owners)
 }
 
+fn dynamic_prefix(ctx: &mut Context, msg: &Message) -> Option<String> {
+    // Make sure we can actually get the guild_id, if not there's
+    // no point to trying to find the prefix. Also means we can use
+    // unwrap for this later on, since we Guard check it's Some() here
+    msg.guild_id?;
+
+    let data = match ctx.data.try_read() {
+        Some(v) => v,
+        None => return None,
+    };
+
+    let database_prefix = || {
+        let mut db = match data.get::<PoolContainer>() {
+            Some(pg_connection) => pg_connection,
+            None => return None,
+        };
+        if let Some(runtime_lock) = data.get::<TokioContainer>() {
+            if let Ok(mut runtime) = Arc::clone(runtime_lock).try_lock() {
+                if let Ok(prefix) = runtime.block_on(
+                    sqlx::query!(
+                        "SELECT prefix FROM guild WHERE id = $1",
+                        *msg.guild_id.unwrap().as_u64() as i64
+                    )
+                    .fetch_optional(&mut db),
+                ) {
+                    if let Some(data) = prefix {
+                        return Some(data.prefix);
+                    }
+                }
+            }
+        }
+        None
+    };
+
+    if let Some(hashmap_lock) = data.get::<PrefixHashMapContainer>() {
+        if let Ok(mut hashmap) = Arc::clone(hashmap_lock).try_lock() {
+            if let Some((_, prefix)) = hashmap.get_key_value(msg.guild_id.unwrap().as_u64()) {
+                return Some(prefix.clone());
+            }
+            let prefix = database_prefix();
+            if let Some(value) = prefix.clone() {
+                hashmap.insert(*msg.guild_id.unwrap().as_u64(), value);
+            }
+            return prefix;
+        }
+    }
+
+    database_prefix()
+}
+
 fn main() {
+    dotenv::dotenv().ok();
     sentry::integrations::env_logger::init(None, Default::default());
 
     let config = Arc::new(Mutex::new(config::Config::default()));
@@ -186,6 +246,21 @@ fn main() {
         (token, enviroment)
     };
 
+    let tokio_runtime = Arc::new(Mutex::new(
+        tokio::runtime::Runtime::new().expect("Couldn't start tokio runtime"),
+    ));
+
+    let pool = tokio_runtime
+        .try_lock()
+        .expect("Unable to get runtime lock to start database pool")
+        .block_on(async {
+            PgPool::new(
+                &std::env::var("DATABASE_URL").expect("DATABASE_URL enviroment variable not set"),
+            )
+            .await
+            .expect("unable to connect to db")
+        });
+
     let _guard = sentry::init((
         "https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627",
         sentry::ClientOptions {
@@ -200,10 +275,15 @@ fn main() {
 
     let mut client = Client::new(&token, Handler).expect("Err creating client");
 
+    let prefix_hash_arc: Arc<Mutex<HashMap<u64, String>>> = Arc::new(Mutex::new(HashMap::new()));
+
     {
         let mut data = client.data.write();
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
         data.insert::<SettingsContainer>(Arc::clone(&config));
+        data.insert::<TokioContainer>(Arc::clone(&tokio_runtime));
+        data.insert::<PoolContainer>(pool);
+        data.insert::<PrefixHashMapContainer>(Arc::clone(&prefix_hash_arc));
     }
 
     let owners = match client.cache_and_http.http.get_current_application_info() {
@@ -220,8 +300,17 @@ fn main() {
         StandardFramework::new()
             .configure(|c| {
                 c.owners(owners)
-                // TODO: Make this prefix dynamic and configurable per guild
-                    .prefix("a.")
+                    .dynamic_prefix(|ctx: &mut Context, msg: &Message| {
+                        // Seperate function so dynamic prefix can look cleaner
+                        // (this allows for us to use return None, when dynamic_prefix
+                        // has no results, Allowing us here, to use a "default" prefix
+                        // in the case that it is None for any reason)
+                        if let Some(prefix) = dynamic_prefix(ctx, msg) {
+                            return Some(prefix);
+                        }
+                        Some("!".to_string())
+                        
+                    })
                     .ignore_webhooks(false)
                     .case_insensitivity(true)
             })
@@ -237,11 +326,12 @@ fn main() {
                 DispatchError::NotEnoughArguments{ min, given} => {
                     let _ = message.channel_id.say(&context.http, format!("You did not provide enough arguments for this command, Minimum arguments are {}, you provided {}.", min, given));
                 }
-                _ => error!("Dispatch Error: {} failed: {:?}", message.content, error),
+                _ => warn!("Dispatch Error: {} failed: {:?}", message.content, error),
             })
+            // TODO: Better error handling
             .after(|context, message, command_name, error| if let Err(why) = error {
-                    let _ = message.channel_id.say(&context.http, "An unexpected error occured when running this command, please try again later.");
-                    error!("Command {} triggered by {} has errored: \n{:#?}", command_name, message.author.tag(), why);
+                    let _ = message.channel_id.say(&context.http, format!("The command {} has errored: ``{}``\nPlease try again later", command_name, why.0));
+                    warn!("Command `{}` triggered by `{}` has errored: \n{}", command_name, message.author.tag(), why.0);
             })
             .help(&MY_HELP)
             .group(&GENERAL_GROUP)

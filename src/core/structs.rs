@@ -89,10 +89,18 @@ pub struct Commit {
 // which allows for non serenity items to access the shardmanger,
 use serenity::client::bridge::gateway::ShardManager;
 use serenity::prelude::Mutex as SernMutex;
-use std::sync::{
-    Arc,
-    Mutex,
+use sqlx::{
+    PgConnection,
+    Pool,
 };
+use std::{
+    collections::HashMap,
+    sync::{
+        Arc,
+        Mutex,
+    },
+};
+use tokio::runtime::Runtime;
 use typemap::Key;
 
 pub struct ShardManagerContainer;
@@ -105,4 +113,22 @@ pub struct SettingsContainer;
 
 impl Key for SettingsContainer {
     type Value = Arc<Mutex<config::Config>>;
+}
+
+pub struct TokioContainer;
+
+impl Key for TokioContainer {
+    type Value = Arc<Mutex<Runtime>>;
+}
+
+pub struct PoolContainer;
+
+impl Key for PoolContainer {
+    type Value = Pool<PgConnection>;
+}
+
+pub struct PrefixHashMapContainer;
+
+impl Key for PrefixHashMapContainer {
+    type Value = Arc<Mutex<HashMap<u64, String>>>;
 }

@@ -32,8 +32,8 @@ fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
     let _ = msg.channel_id.say(
         &ctx.http,
         format!(
-            "{} {}, developed by {}, with help from serenity and its resources.",
-            built_info::PKG_NAME,
+            "<@{}> version {}, is developed by {} with help from serenity and its resources.",
+            ctx.cache.read().user.id,
             built_info::PKG_VERSION,
             bot_owner.name
         ),

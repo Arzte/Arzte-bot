@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 pretty_env_logger = "0.4"
 log = "0.4"
-config = "0.10"
+config = {version = "0.10", default-features = false, features = ["toml"] }
 chrono = "0.4"
 typemap = "0.3"
 sys-info = "0.5"

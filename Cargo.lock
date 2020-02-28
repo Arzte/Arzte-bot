@@ -1007,19 +1007,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hyper-tls"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3adcd308402b9553630734e9c36b77a7e48b3821251ca2493e8cd596763aafaa"
-dependencies = [
- "bytes 0.5.4",
- "hyper 0.13.2",
- "native-tls",
- "tokio 0.2.12",
- "tokio-tls",
-]
-
-[[package]]
 name = "idna"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1715,7 +1702,7 @@ dependencies = [
  "futures 0.1.29",
  "http 0.1.21",
  "hyper 0.12.35",
- "hyper-tls 0.3.2",
+ "hyper-tls",
  "log",
  "mime",
  "mime_guess",
@@ -1749,13 +1736,11 @@ dependencies = [
  "http-body 0.3.1",
  "hyper 0.13.2",
  "hyper-rustls",
- "hyper-tls 0.4.1",
  "js-sys",
  "lazy_static",
  "log",
  "mime",
  "mime_guess",
- "native-tls",
  "percent-encoding 2.1.0",
  "pin-project-lite",
  "rustls 0.17.0",
@@ -1765,7 +1750,6 @@ dependencies = [
  "time",
  "tokio 0.2.12",
  "tokio-rustls",
- "tokio-tls",
  "url 2.1.1",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -2480,16 +2464,6 @@ dependencies = [
  "futures 0.1.29",
  "slab",
  "tokio-executor",
-]
-
-[[package]]
-name = "tokio-tls"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7bde02a3a5291395f59b06ec6945a3077602fac2b07eeeaf0dee2122f3619828"
-dependencies = [
- "native-tls",
- "tokio 0.2.12",
 ]
 
 [[package]]

@@ -25,7 +25,7 @@ blake2b_simd = "0.5"
 sqlx = { version = "0.2", default-features = false, features = [ "runtime-tokio", "macros", "postgres" ] }
 tokio = { version = "0.2", default-features = false, features = ["blocking"] }
 dotenv = "0.15"
-fasteval = "0.2"
+fasteval = {version = "0.2", features = ["nightly"] }
 bc = "0.1"
 
 [dependencies.serenity]

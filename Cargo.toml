@@ -7,31 +7,44 @@ build = "build.rs"
 edition = "2018"
 
 [dependencies]
-pretty_env_logger = "0.4"
 log = "0.4"
-config = {version = "0.10", default-features = false, features = ["toml"] }
 chrono = "0.4"
 typemap = "0.3"
 built = "0.4"
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-reqwest = { version = "0.10", default-features = false, features = ["rustls-tls", "json"] }
-# Specfiying a full version as sentry won't follow semver until release 1.0
-sentry = { version = "0.18.0", features = ["with_env_logger"] }
 tar = "0.4"
 flate2 = "1.0"
 semver = "0.9"
 blake2b_simd = "0.5"
-sqlx = { version = "0.2", default-features = false, features = [ "runtime-tokio", "macros", "postgres" ] }
-tokio = { version = "0.2", default-features = false, features = ["blocking"] }
 dotenv = "0.15"
-fasteval = {version = "0.2", features = ["nightly"] }
 bc = "0.1"
+pretty_env_logger = "0.4"
+fasteval = { version = "0.2", features = ["nightly"] }
+serde = { version = "1.0", features = ["derive"] }
+# Specfiying a full version as sentry won't follow semver until release 1.0
+sentry = { version = "0.18.0", features = ["with_env_logger"] }
+config = { version = "0.10", default-features = false, features = ["toml"] }
+tokio = { version = "0.2", default-features = false, features = ["blocking"] }
+reqwest = { version = "0.10", default-features = false, features = [
+    "rustls-tls",
+    "json"
+] }
+sqlx = { version = "0.2", default-features = false, features = [
+    "runtime-tokio",
+    "macros",
+    "postgres"
+] }
 
 [dependencies.serenity]
 version = "0.8.0"
 default-features = false
-features = ["cache", "http", "framework", "standard_framework", "rustls_backend"]
+features = [
+    "cache",
+    "http",
+    "framework",
+    "standard_framework",
+    "rustls_backend"
+]
 
 [build-dependencies]
 built = "0.4"

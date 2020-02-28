@@ -309,7 +309,6 @@ fn main() {
                             return Some(prefix);
                         }
                         Some("!".to_string())
-                        
                     })
                     .ignore_webhooks(false)
                     .case_insensitivity(true)

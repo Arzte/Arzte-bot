@@ -16,7 +16,8 @@ built = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 reqwest = { version = "0.10", default-features = false, features = ["rustls-tls", "json"] }
-sentry = "0.17.0" # Specfiying a full version as sentry won't follow semver until release 1.0
+# Specfiying a full version as sentry won't follow semver until release 1.0
+sentry = { version = "0.18.0", features = ["with_env_logger"] }
 tar = "0.4"
 flate2 = "1.0"
 semver = "0.9"

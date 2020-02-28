@@ -65,7 +65,6 @@ dependencies = [
  "sqlx",
  "tar",
  "tokio",
- "tokio-util",
  "typemap",
 ]
 

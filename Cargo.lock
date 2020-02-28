@@ -64,7 +64,6 @@ dependencies = [
  "serde_json",
  "serenity",
  "sqlx",
- "sys-info",
  "tar",
  "tokio 0.2.12",
  "tokio-util",
@@ -2236,16 +2235,6 @@ dependencies = [
  "quote",
  "syn",
  "unicode-xid",
-]
-
-[[package]]
-name = "sys-info"
-version = "0.5.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4eff5474e55653c77b4470bdc2278c7e22f942d59658d0e8767d1c97e02a7b9"
-dependencies = [
- "cc",
- "libc",
 ]
 
 [[package]]

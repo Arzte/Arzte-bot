@@ -16,8 +16,9 @@ use serenity::{
 use std::sync::Arc;
 
 #[command]
-#[description = "Tells you about the bot"]
 #[aliases("pre")]
+#[required_permissions(ADMINISTRATOR)]
+/// Tells you about the bot
 fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let guild_id = msg.guild_id.ok_or("Failed to get server ID")?;
     let data = ctx.data.try_read().ok_or("Failed to get data lock")?;

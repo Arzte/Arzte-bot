@@ -13,8 +13,6 @@ jobs:
     services:
       postgres:
         image: postgres:alpine
-        volumes:
-          - /home/runner/work/Arzte-bot/Arzte-bot/ci:/docker-entrypoint-initdb.d/
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -34,6 +32,11 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
+
+      - name: Setup postgres database
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
+        run: psql -d "$DATABASE_URL" -f ./schema.sql
 
       - name: Run cargo build
         uses: actions-rs/cargo@v1

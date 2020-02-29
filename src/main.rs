@@ -141,9 +141,14 @@ struct Info;
 
 #[group]
 #[owners_only]
-#[commands(quit, update, prefix)]
+#[commands(quit, update)]
 /// Commands that can only be ran by the owner of the bot
 struct Owners;
+
+#[group]
+#[commands(prefix)]
+/// Commands to assist with adminstrating a server
+struct Admin;
 
 #[help]
 #[lacking_ownership = "hide"]
@@ -336,6 +341,7 @@ fn main() {
             .group(&GENERAL_GROUP)
             .group(&OWNERS_GROUP)
             .group(&INFO_GROUP)
+            .group(&ADMIN_GROUP)
     );
 
     if let Err(why) = client.start_autosharded() {

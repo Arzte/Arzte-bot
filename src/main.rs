@@ -313,7 +313,7 @@ fn main() {
                         if let Some(prefix) = dynamic_prefix(ctx, msg) {
                             return Some(prefix);
                         }
-                        Some("!".to_string())
+                        Some("a.".to_string())
                     })
                     .ignore_webhooks(false)
                     .case_insensitivity(true)

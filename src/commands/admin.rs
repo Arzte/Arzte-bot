@@ -18,7 +18,9 @@ use std::sync::Arc;
 #[command]
 #[aliases("pre")]
 #[required_permissions(ADMINISTRATOR)]
-/// Tells you about the bot
+/// Sets the bot's prefix in a server to whatever argument is provided
+/// If no new prefix is provided, it will show the server's current prefix
+/// Restricted to Users with the Administrator permission
 fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let guild_id = msg.guild_id.ok_or("Failed to get server ID")?;
     let data = ctx.data.try_read().ok_or("Failed to get data lock")?;

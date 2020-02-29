@@ -146,6 +146,9 @@ struct Info;
 struct Owners;
 
 #[group]
+// This allows the bot owner to override certain permission checks
+// Intended to be a temp option, while the bot is in pre 1.0 development
+#[owner_privilege]
 #[commands(prefix)]
 /// Commands to assist with adminstrating a server
 struct Admin;

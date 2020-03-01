@@ -163,7 +163,7 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
     fs::rename(bin_path, "arzte")?;
     fs::metadata("arzte")?.permissions().set_mode(0o755);
 
-    // Leave archive to last incase of failure before this point (easier to fix ssh wise)
+    // Leave archive till last in case of a failure before this point (easier to fix ssh wise)
     fs::remove_file(dest)?;
 
     info!("Telling raven to finish what it is doing");
@@ -171,51 +171,37 @@ fn update(ctx: &mut Context, msg: &Message) -> CommandResult {
         client.close(Some(Duration::seconds(2).to_std()?));
     }
 
-    if let Err(err) = message
-        .edit(&ctx, |m| m.content("Updated! Restarting now!"))
-        .and_then(|_t| {
-            let shard_manager = {
-                trace!("Getting serenity's data lock...");
-                let data = match ctx.data.try_write() {
-                    Some(v) => v,
-                    None => {
-                        error!(
-                            "Couldn't get data lock for a graceful shutdown, killing the bot..."
-                        );
-                        std::process::exit(0);
-                    }
-                };
-                match data.get::<ShardManagerContainer>() {
-                    Some(v) => std::sync::Arc::clone(v),
-                    None => {
-                        error!(
-                    "Couldn't get the shard manager for a graceful shutdown, killing the bot...."
-                );
-                        std::process::exit(0);
-                    }
-                }
-            };
+    let _ = message.edit(&ctx, |m| m.content("Updated! Restarting now!"));
 
-            trace!("Getting a lock on shard_manager");
-            // We're assigning this to a variable because of E0597, shard_manager
-            // doesn't last long enough without assigning it to a variable here.
-            let shard_manager_lock = shard_manager.try_lock();
-            if let Some(mut manager) = shard_manager_lock {
-                info!("Telling serenity to close all shards, then shutdown");
-                manager.shutdown_all();
-                Ok(())
-            } else {
-                error!(
-                "Couldn't get the shard manager lock for a graceful shutdown, killing the bot..."
-            );
+    let shard_manager = {
+        trace!("Getting serenity's data lock...");
+        let data = match ctx.data.try_write() {
+            Some(v) => v,
+            None => {
+                error!("Couldn't get data lock for a graceful shutdown, killing the bot...");
                 std::process::exit(0);
             }
-        })
-    {
-        error!(
-            "Couldn't edit message: {:?}\n ungracefully killing bot",
-            err
-        );
+        };
+        match data.get::<ShardManagerContainer>() {
+            Some(v) => std::sync::Arc::clone(v),
+            None => {
+                error!(
+                    "Couldn't get the shard manager for a graceful shutdown, killing the bot...."
+                );
+                std::process::exit(0);
+            }
+        }
+    };
+
+    trace!("Getting a lock on shard_manager");
+    // We're assigning this to a variable because of E0597, shard_manager
+    // doesn't last long enough without assigning it to a variable here.
+    let shard_manager_lock = shard_manager.try_lock();
+    if let Some(mut manager) = shard_manager_lock {
+        info!("Telling serenity to close all shards, then shutdown");
+        manager.shutdown_all();
+    } else {
+        error!("Couldn't get the shard manager lock for a graceful shutdown, killing the bot...");
         std::process::exit(0);
     }
 

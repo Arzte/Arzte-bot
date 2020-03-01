@@ -32,7 +32,8 @@ fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
     let _ = msg.channel_id.say(
         &ctx.http,
         format!(
-            "<@{}> version {}, is developed by {} with help from serenity and its resources.",
+            "<@{}> version {}, is developed by {} with help from serenity and its resources.\n
+            Source code can be found at https://github.com/Arzte/Arzte-bot",
             ctx.cache.read().user.id,
             built_info::PKG_VERSION,
             bot_owner.name

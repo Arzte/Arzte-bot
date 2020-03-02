@@ -8,6 +8,10 @@ use serenity::{
     },
     model::prelude::Message,
     prelude::Context,
+    utils::{
+        content_safe,
+        ContentSafeOptions,
+    },
 };
 
 #[command]
@@ -25,20 +29,25 @@ fn math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
             .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
 
         Err(err) => match err {
-            fastevalError::Undefined(variable) => msg
-                .channel_id
-                .say(
-                    &ctx.http,
-                    format!(
-                        "Unknown variable: `{}`\nPS: Variables are unsupported",
-                        variable
-                    ),
-                )
-                .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
-            _ => msg
-                .channel_id
-                .say(&ctx.http, format!("```{:?}```", err))
-                .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(())),
+            fastevalError::Undefined(variable) => {
+                let content = content_safe(&ctx, variable, &ContentSafeOptions::default());
+                msg.channel_id
+                    .say(
+                        &ctx.http,
+                        format!(
+                            "Unknown variable: `{}`\nPS: Variables are unsupported",
+                            content
+                        ),
+                    )
+                    .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
+            }
+            _ => {
+                let content =
+                    content_safe(&ctx, format!("{:#?}", err), &ContentSafeOptions::default());
+                msg.channel_id
+                    .say(&ctx.http, content)
+                    .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
+            }
         },
     }
 }
@@ -70,7 +79,9 @@ fn precision_math(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult
         }
     };
 
+    let content = content_safe(&ctx, value, &ContentSafeOptions::default());
+
     msg.channel_id
-        .say(&ctx.http, value)
+        .say(&ctx.http, content)
         .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
 }

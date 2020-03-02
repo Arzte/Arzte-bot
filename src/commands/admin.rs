@@ -23,22 +23,27 @@ use std::sync::Arc;
 /// Restricted to Users with the Administrator permission
 fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let guild_id = msg.guild_id.ok_or("Failed to get server ID")?;
-    let data = ctx.data.try_read().ok_or("Failed to get data lock")?;
-    let mut db_pool = data
-        .get::<PoolContainer>()
-        .ok_or("Failed to get database pool out of data")?;
-    let tokio_lock = Arc::clone(
-        data.get::<TokioContainer>()
-            .ok_or("Failed to get runtime")?,
-    );
+    let (db_pooler, tokio_lock, prefix_hashmap_lock) = {
+        let data = ctx.data.try_read().ok_or("Failed to get data lock")?;
+        let db_pool = Arc::clone(
+            data.get::<PoolContainer>()
+                .ok_or("Failed to get database pool out of data")?,
+        );
+        let tokio_lock = Arc::clone(
+            data.get::<TokioContainer>()
+                .ok_or("Failed to get runtime")?,
+        );
+        let prefix_hashmap_lock = Arc::clone(
+            data.get::<PrefixHashMapContainer>()
+                .ok_or("Failed to get prefix cache lock")?,
+        );
+        (db_pool, tokio_lock, prefix_hashmap_lock)
+    };
+    let mut db_pool = &db_pooler.pooler;
     let mut tokio = tokio_lock
         .try_lock()
         .ok()
         .ok_or("Failed to get runtime lock")?;
-    let prefix_hashmap_lock = Arc::clone(
-        data.get::<PrefixHashMapContainer>()
-            .ok_or("Failed to get prefix cache lock")?,
-    );
     let mut prefix_hashmap = prefix_hashmap_lock
         .try_lock()
         .ok()

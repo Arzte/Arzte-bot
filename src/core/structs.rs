@@ -87,12 +87,9 @@ pub struct Commit {
 
 // This is the struct and implementation for a ShardManager Container,
 // which allows for non serenity items to access the shardmanger,
+use super::utils::FancyPool;
 use serenity::client::bridge::gateway::ShardManager;
 use serenity::prelude::Mutex as SernMutex;
-use sqlx::{
-    PgConnection,
-    Pool,
-};
 use std::{
     collections::HashMap,
     sync::{
@@ -124,7 +121,7 @@ impl Key for TokioContainer {
 pub struct PoolContainer;
 
 impl Key for PoolContainer {
-    type Value = Pool<PgConnection>;
+    type Value = Arc<FancyPool>;
 }
 
 pub struct PrefixHashMapContainer;

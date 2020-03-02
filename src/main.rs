@@ -56,16 +56,17 @@ use crate::{
         math::*,
         owner::*,
     },
-    core::structs::{
-        PoolContainer,
-        PrefixHashMapContainer,
-        SettingsContainer,
-        ShardManagerContainer,
-        TokioContainer,
+    core::{
+        structs::{
+            PoolContainer,
+            PrefixHashMapContainer,
+            SettingsContainer,
+            ShardManagerContainer,
+            TokioContainer,
+        },
+        utils::new_pool,
     },
 };
-
-use sqlx::PgPool;
 
 struct Handler;
 
@@ -141,7 +142,7 @@ struct Info;
 
 #[group]
 #[owners_only]
-#[commands(quit, update)]
+#[commands(quit, say, update)]
 /// Commands that can only be ran by the owner of the bot
 struct Owners;
 
@@ -181,10 +182,11 @@ fn dynamic_prefix(ctx: &mut Context, msg: &Message) -> Option<String> {
     };
 
     let database_prefix = || {
-        let mut db = match data.get::<PoolContainer>() {
-            Some(pg_connection) => pg_connection,
+        let fancy_db = match data.get::<PoolContainer>() {
+            Some(fancy_pool) => Arc::clone(fancy_pool),
             None => return None,
         };
+        let mut db = &fancy_db.pooler;
         if let Some(runtime_lock) = data.get::<TokioContainer>() {
             if let Ok(mut runtime) = Arc::clone(runtime_lock).try_lock() {
                 if let Ok(prefix) = runtime.block_on(
@@ -258,16 +260,7 @@ fn main() {
         tokio::runtime::Runtime::new().expect("Couldn't start tokio runtime"),
     ));
 
-    let pool = tokio_runtime
-        .try_lock()
-        .expect("Unable to get runtime lock to start database pool")
-        .block_on(async {
-            PgPool::new(
-                &std::env::var("DATABASE_URL").expect("DATABASE_URL enviroment variable not set"),
-            )
-            .await
-            .expect("unable to connect to db")
-        });
+    let pool = new_pool(Arc::clone(&tokio_runtime));
 
     let _guard = sentry::init((
         "https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627",
@@ -290,7 +283,7 @@ fn main() {
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
         data.insert::<SettingsContainer>(Arc::clone(&config));
         data.insert::<TokioContainer>(Arc::clone(&tokio_runtime));
-        data.insert::<PoolContainer>(pool);
+        data.insert::<PoolContainer>(Arc::clone(&pool));
         data.insert::<PrefixHashMapContainer>(Arc::clone(&prefix_hash_arc));
     }
 

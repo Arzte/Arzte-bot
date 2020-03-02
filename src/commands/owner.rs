@@ -11,10 +11,15 @@ use sentry::Hub;
 use serenity::{
     framework::standard::{
         macros::command,
+        Args,
         CommandResult,
     },
     model::prelude::Message,
     prelude::Context,
+    utils::{
+        content_safe,
+        ContentSafeOptions,
+    },
 };
 use std::{
     fs,
@@ -22,6 +27,39 @@ use std::{
     os::unix::fs::PermissionsExt,
     path::Path,
 };
+
+#[command]
+#[aliases("s")]
+// Repeats what the user passed as argument but ensures that user and role
+// mentions are replaced with a safe textual alternative.
+// In this example channel mentions are excluded via the `ContentSafeOptions`.
+fn say(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    let settings = if msg.guild_id.is_some() {
+        // By default roles, users, and channel mentions are cleaned.
+        ContentSafeOptions::default()
+            // We do not want to clean channal mentions as they
+            // do not ping users.
+            .clean_channel(false)
+            // We don't want to clean user mentions, as it was
+            // probably intentionally pinging
+            .clean_user(false)
+    } else {
+        ContentSafeOptions::default()
+            .clean_channel(false)
+            .clean_role(false)
+            // We don't want to clean user mentions, as it was probably
+            // intentionally pinging
+            .clean_user(false)
+    };
+
+    let content = content_safe(&ctx.cache, &args.rest(), &settings);
+
+    if let Err(why) = msg.channel_id.say(&ctx.http, &content) {
+        println!("Error sending message: {:?}", why);
+    }
+
+    Ok(())
+}
 
 #[command]
 #[aliases("q")]

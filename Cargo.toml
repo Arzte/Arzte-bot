@@ -29,14 +29,14 @@ reqwest = { version = "0.10", default-features = false, features = [
     "rustls-tls",
     "json"
 ] }
-sqlx = { version = "0.2", default-features = false, features = [
+sqlx = { version = "0.3", default-features = false, features = [
     "runtime-tokio",
     "macros",
     "postgres"
 ] }
 
 [dependencies.serenity]
-version = "0.8.0"
+version = "0.8"
 default-features = false
 features = [
     "cache",

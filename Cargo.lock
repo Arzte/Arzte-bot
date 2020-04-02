@@ -484,9 +484,9 @@ checksum = "4f4cdac9e4065d7c48e30770f8665b8cef9a3a73a63a4056a33a5f395bc7cf75"
 
 [[package]]
 name = "filetime"
-version = "0.2.8"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ff6d4dab0aa0c8e6346d46052e93b13a16cf847b54ed357087c35011048cc7d"
+checksum = "f59efc38004c988e4201d11d263b8171f49a2e7ec0bdbb71773433f271504a5e"
 dependencies = [
  "cfg-if",
  "libc",
@@ -1230,9 +1230,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-hack"
-version = "0.5.14"
+version = "0.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcfdefadc3d57ca21cf17990a28ef4c0f7c61383a28cb7604cf4a18e6ede1420"
+checksum = "0d659fe7c6d27f25e9d80a1a094c223f5246f6a6596453e09d7229bf42750b63"
 
 [[package]]
 name = "proc-macro-nested"
@@ -1698,9 +1698,9 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "sqlx"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17c5b3c703ccc50d399fdd528464671eecc859a3d32b296c88ee22fd74649b5c"
+checksum = "63de225f20853d36893d165e636fe73d22042164937e1f6271d501df73b3e5a2"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -1708,9 +1708,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx-core"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f285332c31f70075e2bcf020ee92cb9e6a9bf25462f9905e179ad961570d3526"
+checksum = "9c9adfd562af3c210adf8e63171baa2161c888d24f89eb7242ada35a48d35871"
 dependencies = [
  "async-native-tls",
  "async-stream",
@@ -1738,9 +1738,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx-macros"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb6c19726cab4ea2450efd981c8f6f8398226f73492c0bae728a923c1e701980"
+checksum = "c7a391d1f130faf75538b432c34331673bdb16669655cba1ae585391611d88a6"
 dependencies = [
  "dotenv",
  "futures",
@@ -1890,9 +1890,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "0.2.13"
+version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fa5e81d6bc4e67fe889d5783bd2a128ab2e0cfa487e0be16b6a8d177b101616"
+checksum = "2751672f9da075d045c67fdb0068be9850ab7b231fa77bb51d6fd35da9c0bb0d"
 dependencies = [
  "bytes 0.5.4",
  "fnv",

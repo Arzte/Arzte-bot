@@ -64,7 +64,7 @@ use crate::{
             ShardManagerContainer,
             TokioContainer,
         },
-        utils::new_pool,
+        utils::FancyPool,
     },
 };
 
@@ -197,7 +197,6 @@ fn dynamic_prefix(ctx: &mut Context, msg: &Message) -> Option<String> {
     }
 
     let database_prefix = {
-        let mut db = &fancy_db.pooler;
         let data = {
             let mut runtime = runtime_lock.try_lock().ok()?;
             runtime
@@ -206,7 +205,7 @@ fn dynamic_prefix(ctx: &mut Context, msg: &Message) -> Option<String> {
                         "SELECT prefix FROM guild WHERE id = $1",
                         *msg.guild_id.unwrap().as_u64() as i64
                     )
-                    .fetch_optional(&mut db),
+                    .fetch_optional(fancy_db.pool()),
                 )
                 .ok()?
         };
@@ -256,7 +255,7 @@ fn main() {
         tokio::runtime::Runtime::new().expect("Couldn't start tokio runtime"),
     ));
 
-    let pool = new_pool(Arc::clone(&tokio_runtime));
+    let pool = Arc::new(FancyPool::new(Arc::clone(&tokio_runtime)));
 
     let _guard = sentry::init((
         "https://c667c4bf6a704b0f802fa075c98f8c03@sentry.io/1340627",

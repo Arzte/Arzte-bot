@@ -23,9 +23,9 @@ use std::sync::Arc;
 /// Restricted to Users with the Administrator permission
 fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let guild_id = msg.guild_id.ok_or("Failed to get server ID")?;
-    let (db_pooler, tokio_lock, prefix_hashmap_lock) = {
+    let (fancy_db, tokio_lock, prefix_hashmap_lock) = {
         let data = ctx.data.try_read().ok_or("Failed to get data lock")?;
-        let db_pool = Arc::clone(
+        let fancy_db = Arc::clone(
             data.get::<PoolContainer>()
                 .ok_or("Failed to get database pool out of data")?,
         );
@@ -37,9 +37,8 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
             data.get::<PrefixHashMapContainer>()
                 .ok_or("Failed to get prefix cache lock")?,
         );
-        (db_pool, tokio_lock, prefix_hashmap_lock)
+        (fancy_db, tokio_lock, prefix_hashmap_lock)
     };
-    let mut db_pool = &db_pooler.pooler;
     let mut tokio = tokio_lock
         .try_lock()
         .ok()
@@ -62,7 +61,7 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                     "SELECT prefix FROM guild WHERE id = $1",
                     *guild_id.as_u64() as i64
                 )
-                .fetch_optional(&mut db_pool),
+                .fetch_optional(fancy_db.pool()),
             )
             .ok()
             .ok_or("Failed to get prefix from database")?;
@@ -101,7 +100,7 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                 guild_name,
                 args.rest().to_string()
             )
-            .execute(&mut db_pool),
+            .execute(fancy_db.pool()),
         ).ok().ok_or("Error setting prefix, try again later")?;
 
     msg.channel_id

@@ -176,49 +176,45 @@ fn dynamic_prefix(ctx: &mut Context, msg: &Message) -> Option<String> {
     // unwrap for this later on, since we Guard check it's Some() here
     msg.guild_id?;
 
-    let data = match ctx.data.try_read() {
-        Some(v) => v,
-        None => return None,
+    // Try to keep the time we have the data lock as short as possible, since we intend to get the dynamic prefix quickly,
+    // most of our time will be spent aquiring the lock, so we just go ahead and grab out everything we might need at once.
+    let (hashmap_lock, fancy_db, runtime_lock) = {
+        let data = ctx.data.try_read()?;
+        let hashmap_lock = Arc::clone(data.get::<PrefixHashMapContainer>()?);
+        let fancy_db = Arc::clone(data.get::<PoolContainer>()?);
+        let runtime_lock = Arc::clone(data.get::<TokioContainer>()?);
+        (hashmap_lock, fancy_db, runtime_lock)
     };
 
-    let database_prefix = || {
-        let fancy_db = match data.get::<PoolContainer>() {
-            Some(fancy_pool) => Arc::clone(fancy_pool),
-            None => return None,
-        };
+    // We hold the lock for the rest of the function, as if the guild's prefix is not
+    // in the hashmap, after asking the db for the prefix, we'll want to insert that Into
+    // the hashmap regardless, so it makes little sense to hold the lock for a shorter period
+    // and aquire it again after the db responds.
+    let mut hashmap = hashmap_lock.lock().ok()?;
+
+    if let Some(prefix) = hashmap.get(msg.guild_id?.as_u64()) {
+        return Some(prefix.clone());
+    }
+
+    let database_prefix = {
         let mut db = &fancy_db.pooler;
-        if let Some(runtime_lock) = data.get::<TokioContainer>() {
-            if let Ok(mut runtime) = Arc::clone(runtime_lock).try_lock() {
-                if let Ok(prefix) = runtime.block_on(
+        let data = {
+            let mut runtime = runtime_lock.try_lock().ok()?;
+            runtime
+                .block_on(
                     sqlx::query!(
                         "SELECT prefix FROM guild WHERE id = $1",
                         *msg.guild_id.unwrap().as_u64() as i64
                     )
                     .fetch_optional(&mut db),
-                ) {
-                    if let Some(data) = prefix {
-                        return Some(data.prefix);
-                    }
-                }
-            }
-        }
-        None
+                )
+                .ok()?
+        };
+        data?.prefix
     };
 
-    if let Some(hashmap_lock) = data.get::<PrefixHashMapContainer>() {
-        if let Ok(mut hashmap) = Arc::clone(hashmap_lock).try_lock() {
-            if let Some((_, prefix)) = hashmap.get_key_value(msg.guild_id.unwrap().as_u64()) {
-                return Some(prefix.clone());
-            }
-            let prefix = database_prefix();
-            if let Some(value) = prefix.clone() {
-                hashmap.insert(*msg.guild_id.unwrap().as_u64(), value);
-            }
-            return prefix;
-        }
-    }
-
-    database_prefix()
+    hashmap.insert(*msg.guild_id?.as_u64(), database_prefix.clone());
+    Some(database_prefix)
 }
 
 fn main() {

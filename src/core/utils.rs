@@ -9,6 +9,12 @@ use std::sync::{
 };
 use tokio::runtime::Runtime;
 
+// Struct to hold the database pool so it can be wrapped
+// in an Arc.
+// sqlx's pool type get's weird errors trying to send it
+// across threads on it's own, however it won't accept
+// pool wrapped in an Arc, so we put it in this struct,
+// and wrap the struct in an arc
 pub struct FancyPool {
     pub pooler: Pool<PgConnection>,
 }

@@ -2,7 +2,7 @@ name: Release Workflow
 
 on:
   release:
-    types: [published]
+    types: [created, published, prereleased]
 
 jobs:
   create_sentry_release:

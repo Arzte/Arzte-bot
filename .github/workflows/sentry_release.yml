@@ -1,11 +1,11 @@
-name: ReleaseWorkflow
+name: Release Workflow
 
 on:
   release:
     types: [created, published, prereleased]
 
 jobs:
-  createSentryRelease:
+  create_sentry_release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

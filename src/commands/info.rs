@@ -231,7 +231,7 @@ fn server(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                     true,
                 );
                 e.field("Nitro Boosts", guild.premium_subscription_count, true);
-                e.field("Roles", roles, false);
+                e.description(format!("**Role list:** \n{}", roles));
                 if let Some(splash) = guild.splash_url() {
                     e.image(splash);
                 }

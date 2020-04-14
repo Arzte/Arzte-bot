@@ -4,11 +4,11 @@ on:
     tags:
       - "*"
 
-name: Upload Release Asset
+name: Create & Upload Release
 
 jobs:
   build:
-    name: Upload Release Asset
+    name: Create & Upload Release
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -38,15 +38,7 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
         run: psql -d "$DATABASE_URL" -f ./schema.sql
 
-      - name: Run cargo build
-        uses: actions-rs/cargo@v1
-        env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
-        with:
-          command: build
-          args: --release
-      
-      - name: Cache cargo registry
+     - name: Cache cargo registry
         uses: actions/cache@v1
         with:
           path: ~/.cargo/registry
@@ -64,6 +56,14 @@ jobs:
           path: target
           key: ${{ runner.os }}-cargo-build-target-release-${{ hashFiles('**/Cargo.lock') }}
 
+       - name: Run cargo build
+        uses: actions-rs/cargo@v1
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
+        with:
+          command: build
+          args: --release
+      
       - name: Install blake2 for checksum
         uses: actions-rs/cargo@v1
         with:
@@ -95,3 +95,14 @@ jobs:
           asset_path: ./arzte.tar.gz
           asset_name: arzte.tar.gz
           asset_content_type: application/gzip
+
+      - name: Create Sentry.io release
+        uses: tclindner/sentry-releases-action@v1.0.0
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: myself-0q
+          SENTRY_PROJECT: arzte-cute-bot
+        with:
+          tagName: ${{ github.ref }}
+          environment: production
+

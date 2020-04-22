@@ -38,7 +38,7 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
         run: psql -d "$DATABASE_URL" -f ./schema.sql
 
-     - name: Cache cargo registry
+      - name: Cache cargo registry
         uses: actions/cache@v1
         with:
           path: ~/.cargo/registry

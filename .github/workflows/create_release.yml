@@ -56,7 +56,7 @@ jobs:
           path: target
           key: ${{ runner.os }}-cargo-build-target-release-${{ hashFiles('**/Cargo.lock') }}
 
-       - name: Run cargo build
+      - name: Run cargo build
         uses: actions-rs/cargo@v1
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres

@@ -21,7 +21,7 @@ use std::sync::Arc;
 
 #[command]
 #[aliases("pre")]
-#[required_permissions(ADMINISTRATOR)]
+#[required_permissions(MANAGE_ROLES)]
 /// Sets the bot's prefix in a server to whatever argument is provided
 /// If no new prefix is provided, it will show the server's current prefix
 /// Restricted to Users with the Administrator permission
@@ -126,4 +126,92 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
             format!("Changed the server's prefix to ``{}``", args),
         )
         .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
+}
+
+#[command]
+// #[aliases("")]
+#[min_args(3)]
+#[required_permissions(ADMINISTRATOR)]
+/// Sets the bot's prefix in a server to whatever argument is provided
+/// If no new prefix is provided, it will show the server's current prefix
+/// Restricted to Users with the Administrator permission
+fn reaction(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+    let emoji_string = args.single::<String>()?;
+    let emoji_str: &str = emoji_string.as_ref();
+    let emoji = {
+        match serenity::utils::parse_emoji(emoji_str) {
+            Some(emoji) => Some(emoji),
+            None => {
+                if emoji_str.starts_with("<a:") {
+                    let mut split = emoji_str.split(":");
+                    let name = split.nth(1).ok_or("Failed to parse emoji")?;
+                    log::debug!("emoji name: {}", name);
+                    let id = split
+                        .nth(0)
+                        .ok_or("Failed to get name of emoji")?
+                        .trim_end_matches(">");
+                    log::debug!("emoji id: {}", id);
+                    Some(serenity::model::misc::EmojiIdentifier {
+                        id: serenity::model::id::EmojiId(id.parse::<u64>()?),
+                        name: name.to_string(),
+                    })
+                } else if !emoji_str.is_ascii() {
+                    None
+                } else {
+                    return Err(CommandError(format!("Error parsing emoji")));
+                }
+            }
+        }
+    };
+    let role_id = {
+        match args.single::<RoleId>() {
+            Ok(role_id) => role_id,
+            Err(_) => RoleId(
+                serenity::utils::parse_role(args.single::<String>()?)
+                    .ok_or("Couldn't parse role id")?,
+            ),
+        }
+    };
+    let message_id = MessageId(args.single::<u64>()?);
+    let guild_id = msg.guild_id.ok_or("Couldn't get guild id")?;
+
+    let (fancy_db, runtime_lock) = {
+        let data = ctx.data.read();
+        let fancy_db = Arc::clone(data.get::<PoolContainer>().ok_or("Couldn't get fancy db")?);
+        let runtime_lock = Arc::clone(
+            data.get::<TokioContainer>()
+                .ok_or("Couldn't get runtime lock")?,
+        );
+        (fancy_db, runtime_lock)
+    };
+
+    {
+        let mut tokio = runtime_lock.try_lock()?;
+        if let Some(emoji_indentifier) = emoji {
+            log::debug!("Custom Emoji: {:?}", emoji_indentifier);
+            tokio.block_on(
+                sqlx::query!("INSERT INTO reaction_roles (guild_id, role_id, message_id, emoji_id, name) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (role_id) DO UPDATE SET guild_id = $1, role_id = $2, message_id = $3, emoji_id = $4, name = $5",
+                        *guild_id.as_u64() as i64,
+                        *role_id.as_u64() as i64,
+                        *message_id.as_u64() as i64,
+                        *emoji_indentifier.id.as_u64() as i64,
+                        emoji_indentifier.name
+                    ).execute(fancy_db.pool())
+            )?;
+        } else {
+            log::debug!("Unicode emoji: {}", emoji_str);
+            tokio.block_on(sqlx::query!("INSERT INTO reaction_roles (guild_id, role_id, message_id, name) VALUES ($1, $2, $3, $4) ON CONFLICT (role_id) DO UPDATE SET guild_id = $1, role_id = $2, message_id = $3, name = $4",
+                        *guild_id.as_u64() as i64,
+                        *role_id.as_u64() as i64,
+                        *message_id.as_u64() as i64,
+                        emoji_str
+                    ).execute(fancy_db.pool())
+            )?;
+        }
+    }
+
+    return msg
+        .channel_id
+        .say(&ctx.http, format!("Successfully added the role `{}`, with the emoji {}, to the message:\nhttps://discordapp.com/channels/{}/{}/{}", role_id.to_role_cached(&ctx).ok_or("Successfully added role, however unable to find role name in cache.")?.name, emoji_str, guild_id.as_u64(), msg.channel_id.as_u64(), message_id))
+        .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
 }

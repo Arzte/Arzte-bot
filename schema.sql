@@ -6,3 +6,10 @@ CREATE TABLE IF NOT EXISTS guild (
     prefix text NOT NULL DEFAULT 'a.'
 );
 
+CREATE TABLE IF NOT EXISTS reaction_roles (
+    guild_id bigint NOT NULL,
+    role_id bigint UNIQUE PRIMARY KEY NOT NULL,
+    message_id bigint NOT NULL,
+    name text NOT NULL,
+    emoji_id bigint
+);

@@ -57,6 +57,10 @@ use crate::{
         owner::*,
     },
     core::{
+        events::{
+            reaction_add,
+            reaction_remove,
+        },
         structs::{
             PoolContainer,
             PrefixHashMapContainer,
@@ -80,52 +84,25 @@ impl EventHandler for Handler {
     }
 
     fn reaction_add(&self, ctx: Context, add_reaction: Reaction) {
-        // Temporarly limit to one server
-        // TODO: Generize this so it can work in other servers
-        if add_reaction.channel_id.as_u64() != &675_885_303_525_015_582 {
-            return;
+        if reaction_add::reaction_add(&ctx, &add_reaction).is_none() {
+            let author = {
+                match add_reaction.user(&ctx) {
+                    Ok(user) => user.name,
+                    Err(_) => ":User Not Found:".to_owned(),
+                }
+            };
+            warn!("Unable to give a role to {}", author)
         }
-        let reaction = add_reaction.clone();
-        let guild_lock = {
-            match reaction.channel(&ctx).unwrap().guild() {
-                Some(guild_channel) => match guild_channel.read().guild(&ctx) {
-                    Some(v) => v,
-                    None => return,
-                },
-                None => return,
-            }
-        };
-        let guild = guild_lock.read();
-
-        let mut guild_member = guild.member(&ctx, reaction.user_id).unwrap();
-
-        let emoji_name = {
-            match add_reaction.emoji {
-                ReactionType::Custom { name, .. } => name.unwrap(),
-                ReactionType::Unicode(name) => name,
-                _ => "".to_owned(),
-            }
-        };
-
-        match emoji_name.as_ref() {
-            "⛏\u{fe0f}" => {
-                if let Err(error) = guild_member.add_role(&ctx, 675_944_554_989_486_105) {
-                    warn!("Unable to give role: {:?}", error);
+    }
+    fn reaction_remove(&self, ctx: Context, removed_reaction: Reaction) {
+        if reaction_remove::reaction_remove(&ctx, &removed_reaction).is_none() {
+            let author = {
+                match removed_reaction.user(&ctx) {
+                    Ok(user) => user.name,
+                    Err(_) => ":User Not Found:".to_owned(),
                 }
-            }
-            "🎞\u{fe0f}" => {
-                if let Err(error) = guild_member.add_role(&ctx, 675_944_444_868_034_613) {
-                    warn!("Unable to give role: {:?}", error);
-                }
-            }
-            "🔔" => {
-                if let Err(error) = guild_member.add_role(&ctx, 677_524_235_463_426_051) {
-                    warn!("Unable to give role: {:?}", error);
-                }
-            }
-            v => {
-                log::debug!("{:?}", v);
-            }
+            };
+            warn!("Unable to remove a role from {}", author)
         }
     }
 }
@@ -150,7 +127,7 @@ struct Owners;
 // This allows the bot owner to override certain permission checks
 // Intended to be a temp option, while the bot is in pre 1.0 development
 #[owner_privilege]
-#[commands(prefix)]
+#[commands(prefix, reaction)]
 /// Commands to assist with adminstrating a server
 struct Admin;
 

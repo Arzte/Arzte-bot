@@ -10,7 +10,11 @@ use serenity::{
         CommandError,
         CommandResult,
     },
-    model::prelude::Message,
+    model::prelude::{
+        Message,
+        MessageId,
+        RoleId,
+    },
     prelude::Context,
 };
 use std::sync::Arc;
@@ -39,51 +43,57 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         );
         (fancy_db, tokio_lock, prefix_hashmap_lock)
     };
-    let mut tokio = tokio_lock
-        .try_lock()
-        .ok()
-        .ok_or("Failed to get runtime lock")?;
-    let mut prefix_hashmap = prefix_hashmap_lock
-        .try_lock()
-        .ok()
-        .ok_or("Failed to get prefix cache")?;
 
-    if args.is_empty() {
-        if let Some((_, prefix)) = prefix_hashmap.get_key_value(guild_id.as_u64()) {
-            return msg
-                .channel_id
-                .say(&ctx.http, format!("This guild's prefix is ``{}``", prefix))
-                .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
-        }
-        let prefix_option = tokio
-            .block_on(
-                sqlx::query!(
-                    "SELECT prefix FROM guild WHERE id = $1",
-                    *guild_id.as_u64() as i64
-                )
-                .fetch_optional(fancy_db.pool()),
-            )
+    // Limit the scope of the prefix hashmap lock
+    {
+        let mut prefix_hashmap = prefix_hashmap_lock
+            .try_lock()
             .ok()
-            .ok_or("Failed to get prefix from database")?;
+            .ok_or("Failed to get prefix cache")?;
 
-        if let Some(result) = prefix_option {
-            prefix_hashmap.insert(*guild_id.as_u64(), result.prefix.clone());
-            return msg
-                .channel_id
-                .say(
-                    &ctx.http,
-                    format!("This servers prefix is ``{}``", result.prefix),
-                )
-                .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
-        } else {
-            return msg
-                .channel_id
-                .say(&ctx.http, "This servers  prefix is ``a.``")
-                .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+        if args.is_empty() {
+            if let Some(prefix) = prefix_hashmap.get(guild_id.as_u64()) {
+                return msg
+                    .channel_id
+                    .say(&ctx.http, format!("This guild's prefix is ``{}``", prefix))
+                    .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+            }
+            let prefix_option = {
+                let mut tokio = tokio_lock
+                    .try_lock()
+                    .ok()
+                    .ok_or("Failed to get runtime lock")?;
+                tokio
+                    .block_on(
+                        sqlx::query!(
+                            "SELECT prefix FROM guild WHERE id = $1",
+                            *guild_id.as_u64() as i64
+                        )
+                        .fetch_optional(fancy_db.pool()),
+                    )
+                    .ok()
+                    .ok_or("Failed to get prefix from database")?
+            };
+
+            if let Some(result) = prefix_option {
+                prefix_hashmap.insert(*guild_id.as_u64(), result.prefix.clone());
+                return msg
+                    .channel_id
+                    .say(
+                        &ctx.http,
+                        format!("This servers prefix is ``{}``", result.prefix),
+                    )
+                    .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+            } else {
+                return msg
+                    .channel_id
+                    .say(&ctx.http, "This servers  prefix is ``a.``")
+                    .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+            }
         }
-    }
 
-    prefix_hashmap.insert(*guild_id.as_u64(), args.rest().to_string());
+        prefix_hashmap.insert(*guild_id.as_u64(), args.rest().to_string());
+    }
 
     let guild_name = msg
         .guild(&ctx)
@@ -93,20 +103,27 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         .name
         .clone();
 
-    tokio.block_on(
+    // At this point we don't need args anymore, and can just reassign it as a String.
+    let args = args.rest().to_owned();
+
+    // Limit scope of tokio lock
+    {
+        let mut tokio = tokio_lock.try_lock()?;
+        tokio.block_on(
             sqlx::query!(
                 "INSERT INTO guild (id, name, prefix) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET name = $2, prefix = $3",
                 *guild_id.as_u64() as i64,
                 guild_name,
-                args.rest().to_string()
+                args
             )
             .execute(fancy_db.pool()),
         ).ok().ok_or("Error setting prefix, try again later")?;
+    }
 
     msg.channel_id
         .say(
             &ctx.http,
-            format!("Changed the server's prefix to ``{}``", args.rest()),
+            format!("Changed the server's prefix to ``{}``", args),
         )
         .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
 }

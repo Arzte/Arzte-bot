@@ -3,6 +3,7 @@ use crate::core::structs::{
     PrefixHashMapContainer,
     TokioContainer,
 };
+use regex::Regex;
 use serenity::{
     framework::standard::{
         macros::command,
@@ -52,7 +53,7 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
             .ok_or("Failed to get prefix cache")?;
 
         if args.is_empty() {
-            if let Some(prefix) = prefix_hashmap.get(guild_id.as_u64()) {
+            if let Some(prefix) = prefix_hashmap.get(&guild_id.0) {
                 return msg
                     .channel_id
                     .say(&ctx.http, format!("This guild's prefix is ``{}``", prefix))
@@ -65,18 +66,15 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                     .ok_or("Failed to get runtime lock")?;
                 tokio
                     .block_on(
-                        sqlx::query!(
-                            "SELECT prefix FROM guild WHERE id = $1",
-                            *guild_id.as_u64() as i64
-                        )
-                        .fetch_optional(fancy_db.pool()),
+                        sqlx::query!("SELECT prefix FROM guild WHERE id = $1", guild_id.0 as i64)
+                            .fetch_optional(fancy_db.pool()),
                     )
                     .ok()
                     .ok_or("Failed to get prefix from database")?
             };
 
             if let Some(result) = prefix_option {
-                prefix_hashmap.insert(*guild_id.as_u64(), result.prefix.clone());
+                prefix_hashmap.insert(guild_id.0, result.prefix.clone());
                 return msg
                     .channel_id
                     .say(
@@ -92,7 +90,7 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
             }
         }
 
-        prefix_hashmap.insert(*guild_id.as_u64(), args.rest().to_string());
+        prefix_hashmap.insert(guild_id.0, args.rest().to_string());
     }
 
     let guild_name = msg
@@ -112,7 +110,7 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         tokio.block_on(
             sqlx::query!(
                 "INSERT INTO guild (id, name, prefix) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET name = $2, prefix = $3",
-                *guild_id.as_u64() as i64,
+                guild_id.0 as i64,
                 guild_name,
                 args
             )
@@ -132,10 +130,17 @@ fn prefix(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 // #[aliases("")]
 #[min_args(3)]
 #[required_permissions(ADMINISTRATOR)]
-/// Sets the bot's prefix in a server to whatever argument is provided
-/// If no new prefix is provided, it will show the server's current prefix
+/// Allows you to add a reaction to a message, that a user
+/// can click on to give them the role you specified.
+/// If you already added a role, this command will update
+/// to the role to use either the new emoji or on a different message.
+///
+/// Example usage:
+/// a.reaction_add <emoji> <role_id> <message_url>
+/// a.reaction_add :blue_heart: 401927402072309760 https://discordapp.com/channels/197169999494774784/355889026726887426/703682563398697000
+///
 /// Restricted to Users with the Administrator permission
-fn reaction(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+fn reaction_add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let emoji_string = args.single::<String>()?;
     let emoji_str: &str = emoji_string.as_ref();
     let emoji = {
@@ -146,7 +151,8 @@ fn reaction(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                     let mut split = emoji_str.split(':');
                     let name = split.nth(1).ok_or("Failed to parse emoji")?;
                     log::debug!("emoji name: {}", name);
-                    let id = split.next()
+                    let id = split
+                        .next()
                         .ok_or("Failed to get name of emoji")?
                         .trim_end_matches('>');
                     log::debug!("emoji id: {}", id);
@@ -171,7 +177,23 @@ fn reaction(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
             ),
         }
     };
-    let message_id = MessageId(args.single::<u64>()?);
+
+    let message = args.single::<String>()?;
+    // TODO: Put in lazy_static so we don't compile this everytime this function is ran
+    // regex test link: https://regex101.com/r/Rth5jE/3
+    // rust playground link: https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=7bc300a4af839a35ec3a9c4daf9344da
+    let regex =
+        Regex::new(r"(?m)http[s]?://?(ptb\.|canary\.)?discordapp\.com/channels/\d*/(\d*)/(\d*)")?;
+    let capture = regex.captures(&message).ok_or("Couldn't find message id")?;
+    let message_id = {
+        let id = capture
+            .get(3)
+            .ok_or("Couldn't get messsage id")?
+            .as_str()
+            .parse::<u64>()?;
+
+        MessageId(id)
+    };
     let guild_id = msg.guild_id.ok_or("Couldn't get guild id")?;
 
     let (fancy_db, runtime_lock) = {
@@ -194,27 +216,55 @@ fn reaction(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
             );
             tokio.block_on(
                 sqlx::query!("INSERT INTO reaction_roles (guild_id, role_id, message_id, emoji_id, name) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (role_id) DO UPDATE SET guild_id = $1, role_id = $2, message_id = $3, emoji_id = $4, name = $5",
-                        *guild_id.as_u64() as i64,
-                        *role_id.as_u64() as i64,
-                        *message_id.as_u64() as i64,
-                        *emoji_indentifier.id.as_u64() as i64,
+                        guild_id.0 as i64,
+                        role_id.0 as i64,
+                        message_id.0 as i64,
+                        emoji_indentifier.id.0 as i64,
                         emoji_indentifier.name
                     ).execute(fancy_db.pool())
+            )?;
+            ctx.http.create_reaction(
+                capture
+                    .get(2)
+                    .ok_or("Failed to get channel_id to add reaction to the linked message")?
+                    .as_str()
+                    .parse::<u64>()?,
+                message_id.0,
+                &emoji_indentifier.into(),
             )?;
         } else {
             log::debug!("Unicode emoji: {}", emoji_str);
             tokio.block_on(sqlx::query!("INSERT INTO reaction_roles (guild_id, role_id, message_id, name) VALUES ($1, $2, $3, $4) ON CONFLICT (role_id) DO UPDATE SET guild_id = $1, role_id = $2, message_id = $3, name = $4",
-                        *guild_id.as_u64() as i64,
-                        *role_id.as_u64() as i64,
-                        *message_id.as_u64() as i64,
+                        guild_id.0 as i64,
+                        role_id.0 as i64,
+                        message_id.0 as i64,
                         emoji_str
                     ).execute(fancy_db.pool())
+            )?;
+            ctx.http.create_reaction(
+                capture
+                    .get(2)
+                    .ok_or("Failed to get channel_id to add reaction to the linked message")?
+                    .as_str()
+                    .parse::<u64>()?,
+                message_id.0,
+                &emoji_str.into(),
             )?;
         }
     }
 
+    // Attempt to find role in cache,
+    // if found, return the name of the role,
+    // if not found, return a mention of the role.
+    let role_name_or_id = {
+        match role_id.to_role_cached(&ctx) {
+            Some(role) => role.name,
+            None => format!("<@&{}>", role_id.0),
+        }
+    };
+
     msg
         .channel_id
-        .say(&ctx.http, format!("Successfully added the role `{}`, with the emoji {}, to the message:\nhttps://discordapp.com/channels/{}/{}/{}", role_id.to_role_cached(&ctx).ok_or("Successfully added role, however unable to find role name in cache.")?.name, emoji_str, guild_id.as_u64(), msg.channel_id.as_u64(), message_id))
+        .say(&ctx.http, format!("Successfully added the role `{}`, with the emoji {}, to the message:\nhttps://discordapp.com/channels/{}/{}/{}", role_name_or_id, emoji_str, guild_id.0, msg.channel_id.0, message_id))
         .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
 }

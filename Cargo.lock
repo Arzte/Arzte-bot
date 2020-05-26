@@ -59,6 +59,7 @@ dependencies = [
  "flate2",
  "log",
  "pretty_env_logger",
+ "regex",
  "reqwest",
  "semver 0.10.0",
  "sentry",

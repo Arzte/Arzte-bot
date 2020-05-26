@@ -188,7 +188,11 @@ fn reaction(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     {
         let mut tokio = runtime_lock.try_lock()?;
         if let Some(emoji_indentifier) = emoji {
-            log::debug!("Custom Emoji: {:?}", emoji_indentifier);
+            log::debug!(
+                "Custom Emoji: {}:{}",
+                emoji_indentifier.name,
+                emoji_indentifier.id
+            );
             tokio.block_on(
                 sqlx::query!("INSERT INTO reaction_roles (guild_id, role_id, message_id, emoji_id, name) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (role_id) DO UPDATE SET guild_id = $1, role_id = $2, message_id = $3, emoji_id = $4, name = $5",
                         *guild_id.as_u64() as i64,

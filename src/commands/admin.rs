@@ -143,13 +143,12 @@ fn reaction(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
             Some(emoji) => Some(emoji),
             None => {
                 if emoji_str.starts_with("<a:") {
-                    let mut split = emoji_str.split(":");
+                    let mut split = emoji_str.split(':');
                     let name = split.nth(1).ok_or("Failed to parse emoji")?;
                     log::debug!("emoji name: {}", name);
-                    let id = split
-                        .nth(0)
+                    let id = split.next()
                         .ok_or("Failed to get name of emoji")?
-                        .trim_end_matches(">");
+                        .trim_end_matches('>');
                     log::debug!("emoji id: {}", id);
                     Some(serenity::model::misc::EmojiIdentifier {
                         id: serenity::model::id::EmojiId(id.parse::<u64>()?),
@@ -158,7 +157,7 @@ fn reaction(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                 } else if !emoji_str.is_ascii() {
                     None
                 } else {
-                    return Err(CommandError(format!("Error parsing emoji")));
+                    return Err(CommandError("Error parsing emoji".to_string()));
                 }
             }
         }
@@ -214,8 +213,8 @@ fn reaction(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         }
     }
 
-    return msg
+    msg
         .channel_id
         .say(&ctx.http, format!("Successfully added the role `{}`, with the emoji {}, to the message:\nhttps://discordapp.com/channels/{}/{}/{}", role_id.to_role_cached(&ctx).ok_or("Successfully added role, however unable to find role name in cache.")?.name, emoji_str, guild_id.as_u64(), msg.channel_id.as_u64(), message_id))
-        .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()));
+        .map_or_else(|e| Err(CommandError(e.to_string())), |_| Ok(()))
 }

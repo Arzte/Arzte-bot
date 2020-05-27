@@ -182,12 +182,13 @@ fn reaction_add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResu
     // TODO: Put in lazy_static so we don't compile this everytime this function is ran
     // regex test link: https://regex101.com/r/Rth5jE/3
     // rust playground link: https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=7bc300a4af839a35ec3a9c4daf9344da
-    let regex =
-        Regex::new(r"(?m)http[s]?://?(ptb\.|canary\.)?discordapp\.com/channels/\d*/(\d*)/(\d*)")?;
+    let regex = Regex::new(
+        r"(?m)http[s]?://?(?:ptb\.|canary\.)?discord(?:app)?\.com/channels/\d*/(\d*)/(\d*)",
+    )?;
     let capture = regex.captures(&message).ok_or("Couldn't find message id")?;
     let message_id = {
         let id = capture
-            .get(3)
+            .get(2)
             .ok_or("Couldn't get messsage id")?
             .as_str()
             .parse::<u64>()?;
@@ -225,7 +226,7 @@ fn reaction_add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResu
             )?;
             ctx.http.create_reaction(
                 capture
-                    .get(2)
+                    .get(1)
                     .ok_or("Failed to get channel_id to add reaction to the linked message")?
                     .as_str()
                     .parse::<u64>()?,
@@ -243,7 +244,7 @@ fn reaction_add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResu
             )?;
             ctx.http.create_reaction(
                 capture
-                    .get(2)
+                    .get(1)
                     .ok_or("Failed to get channel_id to add reaction to the linked message")?
                     .as_str()
                     .parse::<u64>()?,

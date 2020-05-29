@@ -33,6 +33,7 @@ jobs:
           toolchain: nightly
           override: true
 
+      # TODO: Remove this once sqlx 0.4 comes out with migrations, and allow for static checking of queries based on migrations.
       - name: Setup postgres database
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres
@@ -63,12 +64,13 @@ jobs:
         with:
           command: build
           args: --release
-      
+
       - name: Install blake2 for checksum
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/install@v0.1
         with:
-          command: install
-          args: --force blake2_bin
+          crate: blake2_bin
+          version: latest
+          use-tool-cache: true
 
       - name: Create archive
         run: |
@@ -105,4 +107,3 @@ jobs:
         with:
           tagName: ${{ github.ref }}
           environment: production
-

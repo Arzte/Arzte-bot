@@ -3,6 +3,7 @@ use crate::core::structs::{
     PrefixHashMapContainer,
     TokioContainer,
 };
+use lazy_static::lazy_static;
 use regex::Regex;
 use serenity::{
     framework::standard::{
@@ -179,13 +180,17 @@ fn reaction_add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResu
     };
 
     let message = args.single::<String>()?;
-    // TODO: Put in lazy_static so we don't compile this everytime this function is ran
-    // regex test link: https://regex101.com/r/Rth5jE/3
+    // The lazy_static will only panic if the regex itself is invalid, and therefore, shouldn't
+    // ever panic.
+    // regex test link: https://regex101.com/r/Rth5jE/6
     // rust playground link: https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=7bc300a4af839a35ec3a9c4daf9344da
-    let regex = Regex::new(
-        r"(?m)http[s]?://?(?:ptb\.|canary\.)?discord(?:app)?\.com/channels/\d*/(\d*)/(\d*)",
-    )?;
-    let capture = regex.captures(&message).ok_or("Couldn't find message id")?;
+    lazy_static! {
+        static ref REGEX: Regex = Regex::new(
+            r"(?m)http[s]?://?(?:ptb\.|canary\.)?discord(?:app)?\.com/channels/\d*/(\d*)/(\d*)",
+        )
+        .expect("Invalid regex, this should never happen.");
+    }
+    let capture = REGEX.captures(&message).ok_or("Couldn't find message id")?;
     let message_id = {
         let id = capture
             .get(2)

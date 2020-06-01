@@ -57,9 +57,10 @@ use crate::{
         owner::*,
     },
     core::{
+        error::ReactionError,
         events::{
-            reaction_add,
-            reaction_remove,
+            reaction_add::reaction_add,
+            reaction_remove::reaction_remove,
         },
         structs::{
             PoolContainer,
@@ -84,25 +85,43 @@ impl EventHandler for Handler {
     }
 
     fn reaction_add(&self, ctx: Context, add_reaction: Reaction) {
-        if reaction_add::reaction_add(&ctx, &add_reaction).is_none() {
+        if let Err(e) = reaction_add(&ctx, &add_reaction) {
             let author = {
                 match add_reaction.user(&ctx) {
                     Ok(user) => user.name,
                     Err(_) => ":User Not Found:".to_owned(),
                 }
             };
-            warn!("Unable to give a role to {}", author)
+            match e {
+                ReactionError::NoRows => return,
+                ReactionError::ErrorFindingGuildMember(e) => {
+                    warn!("Error finding {} in guild: {}", author, e);
+                }
+                ReactionError::ErrorAddingRole => {
+                    warn!("Error adding role to {}", author);
+                }
+                err => error!("{}", err),
+            }
         }
     }
     fn reaction_remove(&self, ctx: Context, removed_reaction: Reaction) {
-        if reaction_remove::reaction_remove(&ctx, &removed_reaction).is_none() {
+        if let Err(e) = reaction_remove(&ctx, &removed_reaction) {
             let author = {
                 match removed_reaction.user(&ctx) {
                     Ok(user) => user.name,
                     Err(_) => ":User Not Found:".to_owned(),
                 }
             };
-            warn!("Unable to remove a role from {}", author)
+            match e {
+                ReactionError::NoRows => return,
+                ReactionError::ErrorFindingGuildMember(e) => {
+                    warn!("Error finding {} in guild: {}", author, e);
+                }
+                ReactionError::ErrorAddingRole => {
+                    warn!("Error removing role from {}", author);
+                }
+                err => error!("{}", err),
+            }
         }
     }
 }

@@ -47,7 +47,7 @@ checksum = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
 
 [[package]]
 name = "arzte"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "bc",
  "blake2b_simd",

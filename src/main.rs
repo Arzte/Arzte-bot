@@ -213,9 +213,12 @@ fn main() {
             .expect("No file called Settings.toml in same folder as bot");
 
         let token = {
-            settings
-                .get_str("token")
-                .expect("No token/token value set in Settings file")
+            match std::env::var("DISCORD_TOKEN") {
+                Ok(token) => token,
+                Err(_) => settings
+                    .get_str("token")
+                    .expect("No token/token value set in Settings file"),
+            }
         };
         let enviroment = {
             if !settings.get_bool("debug").unwrap_or_else(|_err| false) {

@@ -160,9 +160,9 @@ checksum = "53d1ccbaf7d9ec9537465a97bf19edc1a4e158ecb49fc16178202238c569cc42"
 
 [[package]]
 name = "bc"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "130a547c4280cfd62ea2611df862af3ab727df46bccf1a6dedcc3b1c78327488"
+checksum = "1edeb817d2df83e39a6cfd6903a4e20583ffe1c3c5298386a04bbb41eeafc74b"
 dependencies = [
  "execute",
 ]
@@ -442,9 +442,9 @@ dependencies = [
 
 [[package]]
 name = "execute"
-version = "0.2.3"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71555d54f7064e1d637690884f66b76c34d107fbad6fab71505b87bb9b08dfc1"
+checksum = "f8148c7d1b75209e7cb69834d61e2f6b7b377fbfa44958685543183adad8ea6b"
 dependencies = [
  "execute-command-macro",
  "execute-command-tokens",
@@ -453,9 +453,9 @@ dependencies = [
 
 [[package]]
 name = "execute-command-macro"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9f1263f8c18dec9a4a99bcb7c6f9d035fb3868e0b5cd9e668a4235196d7f84a"
+checksum = "2b4353abd5da2fe2323abcb6c111d1dc7e67a4ba89c992e5af5cb55274379eff"
 dependencies = [
  "execute-command-macro-impl",
  "proc-macro-hack",

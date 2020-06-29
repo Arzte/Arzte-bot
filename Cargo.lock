@@ -152,9 +152,9 @@ checksum = "e223af0dc48c96d4f8342ec01a4974f139df863896b316681efd36742f22cc67"
 
 [[package]]
 name = "bc"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1edeb817d2df83e39a6cfd6903a4e20583ffe1c3c5298386a04bbb41eeafc74b"
+checksum = "b03d24d1fb2c9233a5b5f023708d1009f4e9e07ccb74c8d3819e7c3b5d186f92"
 dependencies = [
  "execute",
 ]

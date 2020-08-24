@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 bc = "0.1.9"
 blake2b_simd = "0.5.10"
-built = "0.4.2"
+built = "0.4.3"
 chrono = "0.4.13"
 config = { version = "0.10.1", default-features = false, features = [ "toml" ] }
 dotenv = "0.15.0"
@@ -50,4 +50,4 @@ features = [
 ]
 
 [build-dependencies]
-built = "0.4.2"
+built = "0.4.3"

@@ -14,7 +14,7 @@ chrono = "0.4.13"
 config = { version = "0.10.1", default-features = false, features = [ "toml" ] }
 dotenv = "0.15.0"
 fasteval = { version = "0.2.4", features = [ "nightly" ] }
-flate2 = "1.0.16"
+flate2 = "1.0.17"
 lazy_static = "1.4.0"
 log = "0.4.8"
 pretty_env_logger = "0.4.0"

@@ -240,7 +240,7 @@ fn main() {
             }
         };
         let enviroment = {
-            if !settings.get_bool("debug").unwrap_or_else(|_err| false) {
+            if !settings.get_bool("debug").unwrap_or(false) {
                 "Production"
             } else {
                 "Staging"

@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 bc = "0.1.10"
-blake2b_simd = "0.5.10"
+blake2b_simd = "0.5.11"
 built = "0.4.3"
 chrono = "0.4.19"
 config = { version = "0.10.1", default-features = false, features = [ "toml" ] }

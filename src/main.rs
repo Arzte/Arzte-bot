@@ -1,5 +1,5 @@
 #![recursion_limit = "128"]
-#![allow(proc_macro_derive_resolution_fallback)]
+#![allow(proc_macro_derive_resolution_fallback, clippy::unnecessary_wraps)]
 #![feature(try_blocks, nll)]
 
 mod commands;

@@ -39,7 +39,7 @@ tokio = { version = "0.2.22", default-features = false }
 typemap = "0.3.3"
 
 [dependencies.serenity]
-version = "0.8.7"
+version = "0.10.7"
 default-features = false
 features = [
     "cache",
